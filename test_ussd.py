@@ -35,16 +35,16 @@ check("MTN submission",    post("1*1"), "END Thank you. The Bank of Uganda")
 check("Airtel submission", post("1*2"), "END Thank you. The Bank of Uganda")
 check("Track complaint",   post("2"),   "END Fetching status")
 check("Language menu",     post("3"),   "CON Londa Ennimi")
-check("Set English (3*1)", post("3*1"), "Welcome to BoU Consumer Protection ")
+check("Set English (3*1)", post("3*1"), "Welcome to BoU Consumer Protection.")
 check("Fallback invalid",  post("999"), "END Invalid selection")
 
 # -- LUGANDA --
 print("\n[LG] Switch to Luganda (3*2) then test on same number")
-check("Set Luganda (3*2)",  post("3*2"), "BOU Consumer protection")
-check("LG main menu",       post(""),    "CON Londa kyoyagala")
+check("Set Luganda (3*2)",  post("3*2"), "Tusanyuse okulaba.")
+check("LG main menu",       post(""),    "CON Tusanyuse okulaba")
 check("LG fraud branch",    post("1"),   "CON Londa kampuni")
 check("LG MTN submission",  post("1*1"), "END Weebale")
-check("LG track complaint", post("2"),   "END Tukyanonyereza")
+check("LG track complaint", post("2"),   "END Tukyakunonyeza")
 check("LG invalid",         post("99"),  "END Okoze ensobi")
 
 # -- RUNYAKITARA --
