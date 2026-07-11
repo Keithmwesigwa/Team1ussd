@@ -3,424 +3,902 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FraudGuard - Bank of Uganda Consumer Protection</title>
-    <meta name="description" content="FraudGuard: Report mobile money fraud, track resolution progress, and connect with Bank of Uganda's consumer protection system.">
+    <title>USSD Gateway Simulator</title>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg-page:     #f1f5f9;
-            --bg-card:     #ffffff;
-            --bg-muted:    #f8fafc;
-            --border:      #e2e8f0;
-            --border-dark: #cbd5e1;
-            --accent:      #4f46e5;
-            --accent-h:    #4338ca;
-            --success:     #059669;
-            --success-bg:  #d1fae5;
-            --danger:      #dc2626;
-            --warning:     #d97706;
-            --text-h:      #0f172a;
-            --text-b:      #334155;
-            --text-m:      #64748b;
-            --font:        'Plus Jakarta Sans', sans-serif;
-            --mono:        'JetBrains Mono', monospace;
-            --radius:      16px;
-            --shadow:      0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
-            --shadow-md:   0 4px 6px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.06);
+            --bg-primary: #0a0b10;
+            --bg-secondary: #12131a;
+            --bg-tertiary: #1b1c26;
+            --accent-primary: #6366f1; /* Indigo */
+            --accent-primary-hover: #4f46e5;
+            --accent-success: #10b981; /* Emerald */
+            --accent-success-hover: #059669;
+            --accent-danger: #ef4444; /* Rose */
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(18, 19, 26, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
-            background: var(--bg-page);
-            color: var(--text-b);
-            font-family: var(--font);
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
         }
 
-        /* ─── HEADER ─── */
         header {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky; top: 0; z-index: 20;
-            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(10, 11, 16, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 10;
         }
-        .logo-row { display: flex; align-items: center; gap: .75rem; text-decoration: none; }
-        .logo-sq {
-            width: 2.25rem; height: 2.25rem; border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent), #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.3);
-        }
-        .logo-name { font-size: 1.1rem; font-weight: 800; color: var(--text-h); }
-        .logo-sub  { font-size: .65rem; color: var(--text-m); font-weight: 500; }
-        .live-pill {
-            display: flex; align-items: center; gap: 6px;
-            background: #dcfce7; border: 1px solid #86efac;
-            color: #166534; padding: .3rem .85rem; border-radius: 99px;
-            font-size: .75rem; font-weight: 700;
-        }
-        .live-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: #16a34a; animation: blink 1.4s infinite;
-        }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-        /* ─── MAIN LAYOUT ─── */
-        .main {
-            flex: 1; display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 2rem; padding: 2rem;
-            max-width: 1300px; margin: 0 auto; width: 100%;
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        @media(max-width:900px){ .main{ grid-template-columns:1fr; } }
 
-        /* ─── PHONE SHELL ─── */
-        .phone-section { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
-        .phone-shell {
-            width: 300px; height: 600px; background: #18181b;
-            border-radius: 40px; padding: 10px;
-            box-shadow: 0 30px 60px rgba(0,0,0,.25), 0 0 0 2px #3f3f46, 0 0 0 6px #27272a;
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #a855f7 100%);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2.5rem;
+            padding: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 968px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+        }
+
+        /* Phone Simulator Section */
+        .simulator-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .phone-wrapper {
             position: relative;
+            width: 340px;
+            height: 680px;
+            background: #000;
+            border-radius: 45px;
+            padding: 12px;
+            box-shadow: 
+                0px 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0px 0px 0px 4px #27272a,
+                0px 0px 0px 8px #18181b,
+                0px 0px 20px 10px rgba(99, 102, 241, 0.15);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
+        .phone-wrapper:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0px 30px 60px -10px rgba(0, 0, 0, 0.6),
+                0px 0px 0px 4px #27272a,
+                0px 0px 0px 8px #18181b,
+                0px 0px 25px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        /* Dynamic Island / Notch */
+        .phone-notch {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 28px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
+
+        .notch-camera {
+            width: 8px;
+            height: 8px;
+            background: #111827;
+            border-radius: 50%;
+            box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+
+        .notch-speaker {
+            width: 40px;
+            height: 4px;
+            background: #1f2937;
+            border-radius: 2px;
+        }
+
         .phone-screen {
-            width: 100%; height: 100%;
-            background: #fff; border-radius: 32px;
-            overflow: hidden; display: flex; flex-direction: column;
-            border: 1px solid #f1f5f9;
-        }
-        .phone-status {
-            height: 44px; background: #fff;
-            padding: 10px 20px 0;
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: .78rem; font-weight: 700; color: #0f172a;
-        }
-        .phone-icons { display: flex; align-items: center; gap: 5px; color: #0f172a; }
-        .phone-body {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 1rem 1rem 0.5rem; position: relative;
+            width: 100%;
+            height: 100%;
+            background: #0d0e15;
+            border-radius: 35px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            font-family: var(--font-main);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Dialer */
-        .dialer-wrap { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
-        .carrier-info { text-align: center; padding-top: .5rem; }
-        .carrier-name { font-size: .65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-m); }
-        .carrier-time { font-size: 2rem; font-weight: 300; color: var(--text-h); }
+        /* Status Bar */
+        .status-bar {
+            height: 48px;
+            padding: 14px 24px 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            z-index: 50;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Screen Content area */
+        .screen-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            position: relative;
+            justify-content: space-between;
+        }
+
+        /* Home/Dialer UI */
+        .dialer-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+            padding-top: 1rem;
+        }
+
+        .phone-info-header {
+            text-align: center;
+            margin-bottom: auto;
+            margin-top: 2rem;
+        }
+
+        .phone-carrier {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .phone-time {
+            font-size: 2.25rem;
+            font-weight: 300;
+            color: #fff;
+        }
+
         .dialer-display {
-            background: #f8fafc; border: 1px solid var(--border);
-            border-radius: 10px; padding: .6rem 1rem;
-            font-family: var(--mono); font-size: 1.3rem; font-weight: 600;
-            color: var(--text-h); text-align: center; min-height: 3rem;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 1rem; word-break: break-all;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            min-height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            word-break: break-all;
+            text-align: center;
         }
-        .keypad { display: grid; grid-template-columns: repeat(3,1fr); gap: .6rem; margin-bottom: 1rem; }
-        .kbtn {
-            aspect-ratio: 1; border-radius: 50%;
-            background: #f1f5f9; border: 1px solid var(--border);
-            color: var(--text-h); font-size: 1.1rem; font-weight: 600;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: all .15s; line-height: 1.1;
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            justify-items: center;
+            margin-bottom: 1.5rem;
         }
-        .kbtn span { font-size: .5rem; color: var(--text-m); text-transform: uppercase; letter-spacing: .5px; }
-        .kbtn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .kbtn:hover span { color: rgba(255,255,255,.7); }
-        .kbtn:active { transform: scale(.92); }
-        .dial-actions { display: flex; justify-content: center; gap: 1.5rem; align-items: center; padding-bottom: .5rem; }
+
+        .keypad-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .keypad-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(0.9);
+        }
+
+        .keypad-btn span {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: -2px;
+        }
+
+        .dialer-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
         .call-btn {
-            width: 52px; height: 52px; border-radius: 50%;
-            background: #16a34a; border: none; color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 4px 16px rgba(22,163,74,.4);
-            transition: all .2s;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.2s ease;
         }
-        .call-btn:hover { background: #15803d; transform: scale(1.05); }
-        .del-btn {
-            width: 52px; height: 52px; border-radius: 50%;
-            background: transparent; border: none; color: var(--text-m);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: color .2s;
-        }
-        .del-btn:hover { color: var(--danger); }
 
-        /* USSD overlay (inside phone) */
+        .call-btn:hover {
+            background: var(--accent-success-hover);
+        }
+
+        .call-btn:active {
+            transform: scale(0.9);
+        }
+
+        .delete-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #fff;
+        }
+
+        /* USSD Popup / Dialogue Overlay */
         .ussd-overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
-            display: none; align-items: center; justify-content: center;
-            padding: 1rem; z-index: 50; border-radius: 32px;
-        }
-        .ussd-dialog {
-            background: #fff; border-radius: 16px; padding: 1.25rem;
-            width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,.2);
-            animation: pop .25s cubic-bezier(.34,1.56,.64,1);
-        }
-        @keyframes pop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
-        .ussd-msg { font-size: .85rem; line-height: 1.55; color: var(--text-h); margin-bottom: 1rem; white-space: pre-wrap; }
-        .ussd-in {
-            width: 100%; border: 1.5px solid var(--border-dark); border-radius: 8px;
-            padding: .6rem .75rem; font-size: .9rem; color: var(--text-h);
-            outline: none; margin-bottom: 1rem; font-family: var(--font);
-        }
-        .ussd-in:focus { border-color: var(--accent); }
-        .ussd-actions { display: flex; justify-content: flex-end; gap: .75rem; }
-        .ussd-cancel { background: none; border: 1px solid var(--border-dark); color: var(--text-m); padding: .45rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: .8rem; }
-        .ussd-send { background: var(--accent); color: #fff; border: none; padding: .45rem 1.1rem; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: .8rem; }
-
-        /* ─── RIGHT PANEL ─── */
-        .right-panel { display: flex; flex-direction: column; gap: 1.25rem; }
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.5rem;
-            box-shadow: var(--shadow);
-        }
-        .section-hd {
-            font-size: 1rem; font-weight: 800; color: var(--text-h);
-            margin-bottom: 1.25rem; display: flex; align-items: center; gap: .5rem;
-        }
-        .section-hd .icon-wrap {
-            width: 1.85rem; height: 1.85rem; border-radius: 8px;
-            background: #ede9fe; color: var(--accent);
-            display: flex; align-items: center; justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
         }
 
-        /* Portal grid */
-        .portal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
-        .portal-card {
-            border: 1.5px solid var(--border); border-radius: 12px;
-            padding: 1rem; text-decoration: none; color: inherit;
-            transition: all .2s; display: flex; flex-direction: column; gap: .35rem;
+        .ussd-modal {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .portal-card:hover { border-color: var(--accent); background: #faf5ff; transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .pc-head { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: .9rem; color: var(--text-h); }
-        .pc-icon { width: 1.75rem; height: 1.75rem; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
-        .pc-icon.user   { background: #ccfbf1; color: #0d9488; }
-        .pc-icon.mtn    { background: #fef9c3; color: #ca8a04; }
-        .pc-icon.airtel { background: #fee2e2; color: #dc2626; }
-        .pc-icon.bou    { background: #fef3c7; color: #d97706; }
-        .pc-desc { font-size: .75rem; color: var(--text-m); line-height: 1.4; }
-        .pc-auth { font-size: .68rem; font-weight: 700; color: var(--text-m); margin-top: .15rem; display: flex; align-items: center; gap: 3px; }
 
-        /* Quick-launch guides */
-        .guide-row { display: flex; gap: .75rem; flex-wrap: wrap; }
-        .guide-chip {
-            flex: 1; min-width: 120px; background: var(--bg-muted);
-            border: 1px solid var(--border); border-radius: 10px;
-            padding: .75rem; cursor: pointer; transition: all .18s; text-align: center;
+        @keyframes modalPop {
+            0% { transform: scale(0.9) translateY(10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
         }
-        .guide-chip:hover { background: #ede9fe; border-color: #c4b5fd; }
-        .guide-chip-title { font-size: .78rem; font-weight: 700; color: var(--text-h); margin-bottom: .15rem; }
-        .guide-chip-desc  { font-size: .65rem; color: var(--text-m); }
 
-        /* API log */
-        .log-box {
-            background: #f8fafc; border: 1px solid var(--border);
-            border-radius: 10px; padding: .85rem; height: 220px;
-            overflow-y: auto; font-family: var(--mono); font-size: .78rem;
-            display: flex; flex-direction: column; gap: .6rem;
+        .ussd-message {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin-bottom: 1.25rem;
+            white-space: pre-wrap;
+            font-family: var(--font-main);
         }
-        .log-entry { border-left: 3px solid var(--accent); padding-left: .65rem; }
-        .log-entry.ok  { border-color: var(--success); }
-        .log-entry.err { border-color: var(--danger); }
-        .log-ts   { color: var(--text-m); font-size: .68rem; }
-        .log-path { font-weight: 700; color: var(--text-h); }
-        .log-body { color: var(--text-m); margin-top: 2px; white-space: pre-wrap; font-size: .72rem; }
-        .log-resp { color: var(--accent); font-size: .72rem; }
-        .log-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-m); gap: .5rem; text-align: center; }
-        .log-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
-        .clr-btn { background: none; border: 1px solid var(--border); color: var(--text-m); font-size: .72rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer; }
-        .clr-btn:hover { border-color: var(--danger); color: var(--danger); }
 
-        /* Config bar */
-        .cfg-bar { display: flex; gap: 1rem; margin-top: .75rem; flex-wrap: wrap; }
-        .cfg-grp { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 120px; }
-        .cfg-lbl { font-size: .63rem; font-weight: 700; text-transform: uppercase; color: var(--text-m); letter-spacing: .5px; }
-        .cfg-inp {
-            background: var(--bg-muted); border: 1px solid var(--border);
-            border-radius: 7px; padding: .4rem .6rem; font-size: .8rem;
-            color: var(--text-h); font-family: var(--font); outline: none;
+        .ussd-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #fff;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        .cfg-inp:focus { border-color: var(--accent); }
+
+        .ussd-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .ussd-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .ussd-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .ussd-btn-cancel {
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .ussd-btn-cancel:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .ussd-btn-send {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .ussd-btn-send:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        /* Config and Log Panels (Right side) */
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        .section-title i {
+            color: var(--accent-primary);
+        }
+
+        /* Config fields */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: #fff;
+            font-family: var(--font-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Session State Tracker */
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .state-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .state-value {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #fff;
+            margin-top: 0.25rem;
+            word-break: break-all;
+        }
+
+        /* Live Logger */
+        .log-container {
+            display: flex;
+            flex-direction: column;
+            height: 320px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .clear-logs-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .clear-logs-btn:hover {
+            color: var(--accent-danger);
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .log-list {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .log-item {
+            border-left: 3px solid var(--accent-primary);
+            padding-left: 0.75rem;
+            margin-bottom: 0.5rem;
+            animation: logFadeIn 0.3s ease;
+        }
+
+        @keyframes logFadeIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .log-item.error {
+            border-left-color: var(--accent-danger);
+        }
+
+        .log-item.success {
+            border-left-color: var(--accent-success);
+        }
+
+        .log-time-stamp {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .log-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .log-payload {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            padding: 0.5rem;
+            white-space: pre-wrap;
+            color: #d1d5db;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        .log-response {
+            color: #a5b4fc;
+            margin-top: 0.25rem;
+        }
+
+        .empty-logs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            gap: 0.5rem;
+        }
+
+        /* Demo Guides */
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .guide-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .guide-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .guide-card:hover {
+            background: rgba(99, 102, 241, 0.05);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .guide-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .guide-title i {
+            font-size: 0.9rem;
+            color: var(--accent-success);
+        }
+
+        .guide-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo-row">
-            <div class="logo-sq"><i data-lucide="shield-check" style="width:16px;height:16px;"></i></div>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i data-lucide="smartphone"></i>
+            </div>
             <div>
-                <div class="logo-name">FraudGuard</div>
-                <div class="logo-sub">Bank of Uganda — Consumer Protection Engine</div>
+                <h1>USSD Simulator</h1>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">Powered by Flask & Vercel</div>
             </div>
         </div>
-        <div class="live-pill"><div class="live-dot"></div> Ledger Online</div>
+        <div class="badge">Local Environment</div>
     </header>
 
-    <div class="main">
-        <!-- PHONE SIMULATOR -->
-        <div class="phone-section">
-            <div class="phone-shell">
+    <div class="main-container">
+        <!-- SIMULATOR PANEL -->
+        <div class="simulator-section">
+            <div class="phone-wrapper">
+                <div class="phone-notch">
+                    <div class="notch-camera"></div>
+                    <div class="notch-speaker"></div>
+                </div>
                 <div class="phone-screen">
-                    <div class="phone-status">
-                        <span id="clock">10:42</span>
-                        <div class="phone-icons">
-                            <i data-lucide="signal" style="width:12px;height:12px;"></i>
-                            <i data-lucide="wifi" style="width:12px;height:12px;"></i>
-                            <i data-lucide="battery" style="width:14px;height:14px;"></i>
+                    <!-- Status Bar -->
+                    <div class="status-bar">
+                        <span id="current-time">10:42</span>
+                        <div class="status-icons">
+                            <i data-lucide="signal" style="width: 14px; height: 14px;"></i>
+                            <i data-lucide="wifi" style="width: 14px; height: 14px;"></i>
+                            <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
                         </div>
                     </div>
-                    <div class="phone-body">
-                        <!-- Dialer UI -->
-                        <div class="dialer-wrap" id="dialer-ui">
-                            <div class="carrier-info">
-                                <div class="carrier-name">AirSim Network</div>
-                                <div class="carrier-time" id="large-time">10:42 AM</div>
+
+                    <!-- Screen Content -->
+                    <div class="screen-content">
+                        <!-- Dialer Interface -->
+                        <div class="dialer-container" id="dialer-ui">
+                            <div class="phone-info-header">
+                                <div class="phone-carrier">AirSim Gateway</div>
+                                <div class="phone-time" id="large-time">10:42 AM</div>
                             </div>
+                            
                             <div>
                                 <div class="dialer-display" id="dialer-val">*254#</div>
-                                <div class="keypad">
-                                    <button class="kbtn" onclick="pressKey('1')">1<span>&nbsp;</span></button>
-                                    <button class="kbtn" onclick="pressKey('2')">2<span>abc</span></button>
-                                    <button class="kbtn" onclick="pressKey('3')">3<span>def</span></button>
-                                    <button class="kbtn" onclick="pressKey('4')">4<span>ghi</span></button>
-                                    <button class="kbtn" onclick="pressKey('5')">5<span>jkl</span></button>
-                                    <button class="kbtn" onclick="pressKey('6')">6<span>mno</span></button>
-                                    <button class="kbtn" onclick="pressKey('7')">7<span>pqrs</span></button>
-                                    <button class="kbtn" onclick="pressKey('8')">8<span>tuv</span></button>
-                                    <button class="kbtn" onclick="pressKey('9')">9<span>wxyz</span></button>
-                                    <button class="kbtn" onclick="pressKey('*')">*<span>&nbsp;</span></button>
-                                    <button class="kbtn" onclick="pressKey('0')">0<span>+</span></button>
-                                    <button class="kbtn" onclick="pressKey('#')">#<span>&nbsp;</span></button>
+                                
+                                <div class="keypad-grid">
+                                    <button class="keypad-btn" onclick="pressKey('1')">1<span>&nbsp;</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('2')">2<span>abc</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('3')">3<span>def</span></button>
+                                    
+                                    <button class="keypad-btn" onclick="pressKey('4')">4<span>ghi</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('5')">5<span>jkl</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('6')">6<span>mno</span></button>
+                                    
+                                    <button class="keypad-btn" onclick="pressKey('7')">7<span>pqrs</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('8')">8<span>tuv</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('9')">9<span>wxyz</span></button>
+                                    
+                                    <button class="keypad-btn" onclick="pressKey('*')">*<span>&nbsp;</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('0')">0<span>+</span></button>
+                                    <button class="keypad-btn" onclick="pressKey('#')">#<span>&nbsp;</span></button>
                                 </div>
-                                <div class="dial-actions">
-                                    <div style="width:52px;"></div>
+
+                                <div class="dialer-actions">
+                                    <div style="width: 56px;"></div> <!-- Spacer -->
                                     <button class="call-btn" onclick="startUssdSession()">
-                                        <i data-lucide="phone" style="width:20px;height:20px;"></i>
+                                        <i data-lucide="phone"></i>
                                     </button>
-                                    <button class="del-btn" onclick="deleteKey()">
-                                        <i data-lucide="delete" style="width:20px;height:20px;"></i>
+                                    <button class="delete-btn" onclick="deleteKey()">
+                                        <i data-lucide="delete"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- USSD Dialog -->
+                        <!-- USSD Dialog Screen Overlay -->
                         <div class="ussd-overlay" id="ussd-overlay">
-                            <div class="ussd-dialog">
-                                <div class="ussd-msg" id="ussd-msg">Connecting…</div>
-                                <div id="ussd-input-wrap">
-                                    <input type="text" class="ussd-in" id="ussd-input" placeholder="Enter option…" autocomplete="off">
+                            <div class="ussd-modal">
+                                <div class="ussd-message" id="ussd-msg">CON What would you want to check 
+1. My Account 
+2. My phone number</div>
+                                <div id="ussd-input-container">
+                                    <input type="text" class="ussd-input" id="ussd-input" placeholder="Enter option..." autocomplete="off">
                                 </div>
-                                <div class="ussd-actions">
-                                    <button class="ussd-cancel" onclick="cancelSession()">Cancel</button>
-                                    <button class="ussd-send" id="ussd-send-btn" onclick="sendChoice()">Send</button>
+                                <div class="ussd-buttons">
+                                    <button class="ussd-btn ussd-btn-cancel" onclick="cancelSession()">Cancel</button>
+                                    <button class="ussd-btn ussd-btn-send" id="ussd-send-btn" onclick="sendChoice()">Send</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div style="font-size:.78rem; color:var(--text-m); text-align:center;">
-                Dial <strong style="color:var(--text-h);">*254#</strong> and press the green call button to simulate
             </div>
         </div>
 
-        <!-- RIGHT PANEL -->
-        <div class="right-panel">
-            <!-- Portal links -->
-            <div class="card">
-                <div class="section-hd">
-                    <div class="icon-wrap"><i data-lucide="layout-grid" style="width:14px;height:14px;"></i></div>
-                    System Portals
+        <!-- CONFIGURATION & LOGGING PANEL -->
+        <div class="dashboard-section">
+            <!-- Simulator Config -->
+            <div class="glass-card">
+                <div class="section-title">
+                    <i data-lucide="sliders"></i> Simulator Configuration
                 </div>
-                <div class="portal-grid">
-                    <a href="/user" class="portal-card">
-                        <div class="pc-head">
-                            <div class="pc-icon user"><i data-lucide="user" style="width:14px;height:14px;"></i></div>
-                            Consumer Portal
-                        </div>
-                        <div class="pc-desc">Citizens file complaints and track case progress in real time.</div>
-                        <div class="pc-auth"><i data-lucide="unlock" style="width:10px;height:10px;"></i> Public access — no login required</div>
-                    </a>
-                    <a href="/login/mtn" class="portal-card">
-                        <div class="pc-head">
-                            <div class="pc-icon mtn"><i data-lucide="smartphone" style="width:14px;height:14px;"></i></div>
-                            MTN Uganda Desk
-                        </div>
-                        <div class="pc-desc">MTN compliance officers manage and resolve MTN disputes.</div>
-                        <div class="pc-auth"><i data-lucide="lock" style="width:10px;height:10px;"></i> Login required</div>
-                    </a>
-                    <a href="/login/airtel" class="portal-card">
-                        <div class="pc-head">
-                            <div class="pc-icon airtel"><i data-lucide="radio" style="width:14px;height:14px;"></i></div>
-                            Airtel Uganda Desk
-                        </div>
-                        <div class="pc-desc">Airtel compliance officers manage and resolve Airtel disputes.</div>
-                        <div class="pc-auth"><i data-lucide="lock" style="width:10px;height:10px;"></i> Login required</div>
-                    </a>
-                    <a href="/login/bou" class="portal-card">
-                        <div class="pc-head">
-                            <div class="pc-icon bou"><i data-lucide="landmark" style="width:14px;height:14px;"></i></div>
-                            Bank of Uganda
-                        </div>
-                        <div class="pc-desc">BoU supervisors audit all cases and escalate SLA breaches.</div>
-                        <div class="pc-auth"><i data-lucide="lock" style="width:10px;height:10px;"></i> Login required</div>
-                    </a>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" class="form-input" id="cfg-phone" value="+256770123456">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">USSD Service Code</label>
+                        <input type="text" class="form-input" id="cfg-code" value="*254#">
+                    </div>
                 </div>
-            </div>
 
-            <!-- Quick guides -->
-            <div class="card">
-                <div class="section-hd">
-                    <div class="icon-wrap"><i data-lucide="zap" style="width:14px;height:14px;"></i></div>
-                    Quick Launch Scenarios
-                </div>
-                <div class="guide-row">
-                    <div class="guide-chip" onclick="launchGuide('report')">
-                        <div class="guide-chip-title">📋 Report Fraud</div>
-                        <div class="guide-chip-desc">Dial *254# → 1 → MTN</div>
+                <div class="state-grid">
+                    <div class="state-box">
+                        <div class="form-label" style="font-size: 0.65rem;">Session ID</div>
+                        <div class="state-value" id="state-session-id">-</div>
                     </div>
-                    <div class="guide-chip" onclick="launchGuide('track')">
-                        <div class="guide-chip-title">🔍 Track Case</div>
-                        <div class="guide-chip-desc">Dial *254# → 2</div>
+                    <div class="state-box">
+                        <div class="form-label" style="font-size: 0.65rem;">Text Path</div>
+                        <div class="state-value" id="state-text-path">-</div>
                     </div>
-                    <div class="guide-chip" onclick="launchGuide('language')">
-                        <div class="guide-chip-title">🌐 Change Language</div>
-                        <div class="guide-chip-desc">Dial *254# → 3</div>
+                    <div class="state-box">
+                        <div class="form-label" style="font-size: 0.65rem;">Active</div>
+                        <div class="state-value" id="state-active" style="color: var(--accent-danger);">No</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Live API log -->
-            <div class="card">
-                <div class="log-hd">
-                    <div class="section-hd" style="margin-bottom:0;">
-                        <div class="icon-wrap"><i data-lucide="terminal" style="width:14px;height:14px;"></i></div>
-                        Live API Log
-                    </div>
-                    <button class="clr-btn" onclick="clearLogs()">Clear</button>
+            <!-- Demo Guides / Presets -->
+            <div class="glass-card">
+                <div class="section-title">
+                    <i data-lucide="book-open"></i> Quick Scenarios
                 </div>
-                <div class="log-box" id="log-box">
-                    <div class="log-empty" id="log-empty">
-                        <i data-lucide="activity" style="width:2rem;height:2rem;color:var(--border-dark);"></i>
-                        <span>Gateway logs appear here as you use the simulator</span>
+                <div class="guide-grid">
+                    <div class="guide-card" onclick="loadPreset('*284#', '1*1')">
+                        <div class="guide-title">
+                            <i data-lucide="shield-alert"></i> Report MTN Fraud
+                        </div>
+                        <div class="guide-desc">Dial -> Report Fraud (1) -> MTN (1). Triggers IVR voice callback in caller's language.</div>
+                    </div>
+                    <div class="guide-card" onclick="loadPreset('*284#', '1*2')">
+                        <div class="guide-title">
+                            <i data-lucide="shield-off"></i> Report Airtel Fraud
+                        </div>
+                        <div class="guide-desc">Dial -> Report Fraud (1) -> Airtel (2). Triggers IVR voice callback in caller's language.</div>
+                    </div>
+                    <div class="guide-card" onclick="loadPreset('*284#', '2')">
+                        <div class="guide-title">
+                            <i data-lucide="activity"></i> Track Complaint
+                        </div>
+                        <div class="guide-desc">Dial -> Track Active Complaint (2). Triggers automated status voice callback.</div>
+                    </div>
+                    <div class="guide-card" onclick="loadPreset('*284#', '3*2')">
+                        <div class="guide-title">
+                            <i data-lucide="languages"></i> Switch to Luganda
+                        </div>
+                        <div class="guide-desc">Dial -> Change Language (3) -> Luganda (2). Persists language preference in session store.</div>
+                    </div>
+                    <div class="guide-card" onclick="loadPreset('*284#', '3*3')">
+                        <div class="guide-title">
+                            <i data-lucide="globe"></i> Switch to Runyakitara
+                        </div>
+                        <div class="guide-desc">Dial -> Change Language (3) -> Runyakitara (3). All subsequent menus appear in Runyakitara.</div>
                     </div>
                 </div>
-                <div class="cfg-bar">
-                    <div class="cfg-grp">
-                        <div class="cfg-lbl">Phone Number (Simulator)</div>
-                        <input class="cfg-inp" id="sim-phone" value="+256770123456">
+            </div>
+
+            <!-- API Live Log -->
+            <div class="glass-card log-container">
+                <div class="log-header">
+                    <div class="section-title" style="margin-bottom: 0;">
+                        <i data-lucide="terminal"></i> API Request Logs
                     </div>
-                    <div class="cfg-grp">
-                        <div class="cfg-lbl">Service Code</div>
-                        <input class="cfg-inp" id="sim-code" value="*254#">
+                    <button class="clear-logs-btn" onclick="clearLogs()">
+                        <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Clear Logs
+                    </button>
+                </div>
+                <div class="log-list" id="log-list">
+                    <div class="empty-logs" id="empty-logs">
+                        <i data-lucide="database" style="width: 2rem; height: 2rem;"></i>
+                        <span>No logs yet. Start a session to view traffic.</span>
                     </div>
                 </div>
             </div>
@@ -428,128 +906,249 @@
     </div>
 
     <script>
+        // Initialize Lucide Icons
         lucide.createIcons();
 
-        // Clock
-        function updateClock() {
+        // State variables
+        let isSessionActive = false;
+        let currentSessionId = "";
+        let textHistory = [];
+        let serverUrl = "/ussd";
+
+        // Update time display
+        function updateTime() {
             const now = new Date();
-            const h = now.getHours().toString().padStart(2,'0');
-            const m = now.getMinutes().toString().padStart(2,'0');
-            const period = now.getHours() >= 12 ? 'PM' : 'AM';
-            const h12 = now.getHours() % 12 || 12;
-            document.getElementById('clock').textContent = `${h}:${m}`;
-            document.getElementById('large-time').textContent = `${h12}:${m} ${period}`;
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const timeString = `${hours}:${minutes}`;
+            const timeWithAmpm = `${hours}:${minutes} ${ampm}`;
+
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('large-time').textContent = timeWithAmpm;
         }
-        updateClock(); setInterval(updateClock, 10000);
+        setInterval(updateTime, 1000);
+        updateTime();
 
-        // Keypad
-        let dialInput = '';
-        function pressKey(k) { dialInput += k; document.getElementById('dialer-val').textContent = dialInput || '*254#'; }
-        function deleteKey() { dialInput = dialInput.slice(0,-1); document.getElementById('dialer-val').textContent = dialInput || '*254#'; }
-
-        // USSD session
-        let sessionText = '';
-        let sessionId   = 'sim_' + Math.random().toString(36).slice(2);
-
-        function startUssdSession() {
-            const code = document.getElementById('dialer-val').textContent.trim();
-            if (!code.endsWith('#')) { alert('Dial a USSD code ending with # first.'); return; }
-            sessionText = '';
-            sessionId   = 'sim_' + Math.random().toString(36).slice(2);
-            showOverlay();
-            sendUssd();
-        }
-
-        function sendChoice() {
-            const val = document.getElementById('ussd-input').value.trim();
-            if (!val) return;
-            if (sessionText) sessionText += '*' + val;
-            else sessionText = val;
-            document.getElementById('ussd-input').value = '';
-            sendUssd();
-        }
-
-        async function sendUssd() {
-            const phone = document.getElementById('sim-phone').value;
-            const code  = document.getElementById('sim-code').value;
-            const body  = new URLSearchParams({ sessionId, serviceCode: code, phoneNumber: phone, text: sessionText });
-
-            const ts = new Date().toLocaleTimeString();
-            addLog({ type:'info', ts, path:`POST /ussd`, body:`text="${sessionText || ''}"`, resp:'' });
-
-            try {
-                const res = await fetch('/ussd', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
-                const txt = await res.text();
-
-                const isCon = txt.startsWith('CON');
-                const isEnd = txt.startsWith('END');
-                const msg   = txt.replace(/^(CON|END)\s?/, '');
-
-                addLog({ type: isEnd ? 'ok' : 'info', ts: new Date().toLocaleTimeString(), path:`← ${isCon?'CON':'END'}`, body:'', resp: msg.slice(0,80) + (msg.length>80?'…':'') });
-
-                document.getElementById('ussd-msg').textContent = msg;
-
-                const inputWrap = document.getElementById('ussd-input-wrap');
-                const sendBtn   = document.getElementById('ussd-send-btn');
-
-                if (isEnd) {
-                    inputWrap.style.display = 'none';
-                    sendBtn.textContent = 'OK';
-                    sendBtn.onclick = cancelSession;
-                } else {
-                    inputWrap.style.display = 'block';
-                    sendBtn.textContent = 'Send';
-                    sendBtn.onclick = sendChoice;
-                    setTimeout(() => document.getElementById('ussd-input').focus(), 50);
-                }
-            } catch(e) {
-                addLog({ type:'err', ts: new Date().toLocaleTimeString(), path:'Error', body:'', resp: e.message });
-                document.getElementById('ussd-msg').textContent = 'Connection error. Is the server running?';
+        // Phone Dialer controls
+        const dialDisplay = document.getElementById('dialer-val');
+        
+        function pressKey(key) {
+            if (dialDisplay.textContent === "") {
+                dialDisplay.textContent = key;
+            } else {
+                dialDisplay.textContent += key;
             }
         }
 
-        function showOverlay() {
-            const overlay = document.getElementById('ussd-overlay');
-            overlay.style.display = 'flex';
-            document.getElementById('ussd-msg').textContent = 'Connecting…';
-            document.getElementById('ussd-input').value = '';
-            document.getElementById('ussd-input-wrap').style.display = 'block';
-            const btn = document.getElementById('ussd-send-btn');
-            btn.textContent = 'Send'; btn.onclick = sendChoice;
+        function deleteKey() {
+            let val = dialDisplay.textContent;
+            if (val.length > 0) {
+                dialDisplay.textContent = val.slice(0, -1);
+            }
+        }
+
+        // Quick Presets
+        function loadPreset(code, path) {
+            document.getElementById('cfg-code').value = code;
+            dialDisplay.textContent = code;
+            
+            // Auto trigger session
+            startUssdSession().then(() => {
+                // If it is a multiple step preset
+                const steps = path.split('*');
+                let stepDelay = 800;
+                
+                steps.forEach((step, index) => {
+                    setTimeout(() => {
+                        const inputEl = document.getElementById('ussd-input');
+                        if (inputEl) {
+                            inputEl.value = step;
+                            sendChoice();
+                        }
+                    }, stepDelay * (index + 1));
+                });
+            });
+        }
+
+        // Logs functions
+        function addLog(type, title, text, payload, response) {
+            const emptyLogs = document.getElementById('empty-logs');
+            if (emptyLogs) emptyLogs.remove();
+
+            const logList = document.getElementById('log-list');
+            const item = document.createElement('div');
+            item.className = `log-item ${type}`;
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(2, '0')}`;
+
+            item.innerHTML = `
+                <div class="log-time-stamp">${timeStr}</div>
+                <div class="log-meta">${title}</div>
+                <div>${text}</div>
+                ${payload ? `<div class="log-payload"><strong>POST Request Data:</strong>\n${payload}</div>` : ''}
+                ${response ? `<div class="log-response"><strong>API Response:</strong> ${response}</div>` : ''}
+            `;
+
+            logList.appendChild(item);
+            logList.scrollTop = logList.scrollHeight;
+        }
+
+        function clearLogs() {
+            const logList = document.getElementById('log-list');
+            logList.innerHTML = `
+                <div class="empty-logs" id="empty-logs">
+                    <i data-lucide="database" style="width: 2rem; height: 2rem;"></i>
+                    <span>No logs yet. Start a session to view traffic.</span>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // Generate Random Session ID
+        function generateSessionId() {
+            return "session_" + Math.random().toString(36).substring(2, 15);
+        }
+
+        // USSD Communications
+        async function startUssdSession() {
+            const serviceCode = dialDisplay.textContent.trim();
+            const phoneNumber = document.getElementById('cfg-phone').value.trim();
+
+            if (!serviceCode) {
+                alert("Please enter a service code first (e.g. *254#).");
+                return;
+            }
+
+            // Reset USSD tracking state
+            isSessionActive = true;
+            currentSessionId = generateSessionId();
+            textHistory = [];
+            
+            // Sync status display
+            document.getElementById('state-session-id').textContent = currentSessionId.substring(0, 10) + "...";
+            document.getElementById('state-text-path').textContent = '""';
+            const activeStatus = document.getElementById('state-active');
+            activeStatus.textContent = "Yes";
+            activeStatus.style.color = "var(--accent-success)";
+
+            // Show USSD Overlay
+            document.getElementById('ussd-overlay').style.display = 'flex';
+            document.getElementById('ussd-input-container').style.display = 'block';
+            document.getElementById('ussd-input').value = "";
+            document.getElementById('ussd-input').focus();
+            document.getElementById('ussd-send-btn').style.display = 'inline-block';
+            document.getElementById('ussd-msg').textContent = "Connecting to USSD server...";
+
+            // API Call
+            await queryUssdAPI(currentSessionId, serviceCode, phoneNumber, "");
+        }
+
+        async function sendChoice() {
+            if (!isSessionActive) return;
+
+            const inputVal = document.getElementById('ussd-input').value.trim();
+            
+            // In USSD gateway, all inputs are joined with '*'
+            if (inputVal !== "") {
+                textHistory.push(inputVal);
+            }
+            const combinedText = textHistory.join('*');
+            document.getElementById('state-text-path').textContent = combinedText === "" ? '""' : combinedText;
+
+            // Reset input field
+            document.getElementById('ussd-input').value = "";
+            document.getElementById('ussd-input').focus();
+
+            const serviceCode = document.getElementById('cfg-code').value.trim();
+            const phoneNumber = document.getElementById('cfg-phone').value.trim();
+
+            await queryUssdAPI(currentSessionId, serviceCode, phoneNumber, combinedText);
         }
 
         function cancelSession() {
+            if (!isSessionActive) return;
+            
+            addLog('error', 'SESSION CANCELLED', 'User cancelled the USSD dialog.', null, null);
+            endSession();
+        }
+
+        function endSession() {
+            isSessionActive = false;
             document.getElementById('ussd-overlay').style.display = 'none';
-            sessionText = ''; dialInput = '';
-            document.getElementById('dialer-val').textContent = '*254#';
+            document.getElementById('state-active').textContent = "No";
+            document.getElementById('state-active').style.color = "var(--accent-danger)";
+            document.getElementById('state-session-id').textContent = "-";
+            document.getElementById('state-text-path').textContent = "-";
         }
 
-        // Guide shortcuts
-        function launchGuide(type) {
-            sessionText = ''; sessionId = 'sim_' + Math.random().toString(36).slice(2);
-            dialInput   = '*254#'; document.getElementById('dialer-val').textContent = '*254#';
-            showOverlay(); sendUssd();
+        async function queryUssdAPI(sessionId, serviceCode, phoneNumber, textPath) {
+            // Setup details for request body
+            const formData = new URLSearchParams();
+            formData.append('sessionId', sessionId);
+            formData.append('serviceCode', serviceCode);
+            formData.append('phoneNumber', phoneNumber);
+            formData.append('text', textPath);
+
+            const requestBodyStr = `sessionId=${sessionId}\nserviceCode=${serviceCode}\nphoneNumber=${phoneNumber}\ntext="${textPath}"`;
+            
+            try {
+                const response = await fetch(serverUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseText = await response.text();
+                
+                // Print to logs
+                addLog('success', 'POST ' + serverUrl, 'Received response from server.', requestBodyStr, responseText);
+
+                // Handle USSD protocol
+                if (responseText.startsWith("CON ")) {
+                    const messageContent = responseText.substring(4);
+                    document.getElementById('ussd-msg').textContent = messageContent;
+                } else if (responseText.startsWith("END ")) {
+                    const messageContent = responseText.substring(4);
+                    document.getElementById('ussd-msg').textContent = messageContent;
+                    // Hide the input since session is completed
+                    document.getElementById('ussd-input-container').style.display = 'none';
+                    document.getElementById('ussd-send-btn').style.display = 'none';
+                    
+                    // Add OK / Dismiss button behavior instead
+                    setTimeout(() => {
+                        if (isSessionActive) {
+                            addLog('info', 'SESSION ENDED', 'USSD gateway sent END instruction.', null, null);
+                            endSession();
+                        }
+                    }, 4000);
+                } else {
+                    // Plain text response fallback
+                    document.getElementById('ussd-msg').textContent = responseText;
+                }
+
+            } catch (error) {
+                console.error("API request failed:", error);
+                document.getElementById('ussd-msg').textContent = "Connection error:\n" + error.message;
+                addLog('error', 'API CONNECTION ERROR', error.message, requestBodyStr, null);
+            }
         }
 
-        // Logs
-        function addLog({ type, ts, path, body, resp }) {
-            const box = document.getElementById('log-box');
-            document.getElementById('log-empty').style.display = 'none';
-            const el = document.createElement('div');
-            el.className = `log-entry ${type}`;
-            el.innerHTML = `<div class="log-ts">${ts}</div>
-                <div class="log-path">${path}</div>
-                ${body ? `<div class="log-body">${body}</div>` : ''}
-                ${resp ? `<div class="log-resp">${resp}</div>` : ''}`;
-            box.appendChild(el);
-            box.scrollTop = box.scrollHeight;
-        }
-        function clearLogs() {
-            document.getElementById('log-box').innerHTML = `<div class="log-empty" id="log-empty">
-                <i data-lucide="activity" style="width:2rem;height:2rem;color:var(--border-dark);"></i>
-                <span>Gateway logs appear here as you use the simulator</span></div>`;
-            lucide.createIcons();
-        }
+        // Support hitting Enter in the USSD Input Field
+        document.getElementById('ussd-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChoice();
+            }
+        });
     </script>
 </body>
 </html>
