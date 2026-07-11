@@ -854,15 +854,21 @@
                 <div class="guide-grid">
                     <div class="guide-card" onclick="loadPreset('*254#', '1*1')">
                         <div class="guide-title">
-                            <i data-lucide="credit-card"></i> Check Account No.
+                            <i data-lucide="shield-alert"></i> Report MTN Fraud
                         </div>
-                        <div class="guide-desc">Starts session, chooses "My Account" (1), then "Account number" (1). Expects: ACC1001.</div>
+                        <div class="guide-desc">Initial dial (*254#) -> Report Mobile Money Fraud (1) -> MTN Uganda (1). Triggers voice IVR callback.</div>
                     </div>
                     <div class="guide-card" onclick="loadPreset('*254#', '2')">
                         <div class="guide-title">
-                            <i data-lucide="phone-call"></i> Check Phone No.
+                            <i data-lucide="activity"></i> Track Complaint
                         </div>
-                        <div class="guide-desc">Starts session, chooses "My phone number" (2). Expects: Terminal response with phone number.</div>
+                        <div class="guide-desc">Initial dial (*254#) -> Track Active Complaint (2). Queries database and triggers outbound status voice call.</div>
+                    </div>
+                    <div class="guide-card" onclick="loadPreset('*254#', '3*2')">
+                        <div class="guide-title">
+                            <i data-lucide="languages"></i> Luganda Language
+                        </div>
+                        <div class="guide-desc">Initial dial (*254#) -> Change Language (3) -> Luganda (2). Updates language profile on backend.</div>
                     </div>
                 </div>
             </div>
