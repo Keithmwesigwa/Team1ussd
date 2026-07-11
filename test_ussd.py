@@ -40,11 +40,11 @@ check("Fallback invalid",  post("999"), "END Invalid selection")
 
 # -- LUGANDA --
 print("\n[LG] Switch to Luganda (3*2) then test on same number")
-check("Set Luganda (3*2)",  post("3*2"), "Twakusanyukidde")
-check("LG main menu",       post(""),    "CON Twakusanyukidde")
+check("Set Luganda (3*2)",  post("3*2"), "BOU Consumer protection")
+check("LG main menu",       post(""),    "CON Londa kyoyagala")
 check("LG fraud branch",    post("1"),   "CON Londa kampuni")
 check("LG MTN submission",  post("1*1"), "END Weebale")
-check("LG track complaint", post("2"),   "END Tukyakunonyeza")
+check("LG track complaint", post("2"),   "END Tukyanonyereza")
 check("LG invalid",         post("99"),  "END Okoze ensobi")
 
 # -- RUNYAKITARA --
