@@ -22,7 +22,8 @@ translation_matrix = {
         'opt2':           "2. Track Active Complaint",
         'opt3':           "3. Change Language / Ennimi",
         'select_provider':"Select Affected Provider:",
-        'ivr_redirect':   "Thank you. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
+        'select_fraud_type': "Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
+        'ivr_redirect':   "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
         'status_redirect':"Fetching status. You will receive an automated voice update call shortly.",
         'lang_select':    "Londa Ennimi / Choose Language:",
         'invalid':        "Invalid selection. Please try again.",
@@ -33,7 +34,8 @@ translation_matrix = {
         'opt2':           "2. Manya okugenda mu maaso kw'omusango",
         'opt3':           "3. Kyusa olulimi / Change Language",
         'select_provider':"Londa kampuni y'essimu ekozesseddwa:",
-        'ivr_redirect':   "Weebale. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
+        'select_fraud_type': "Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
+        'ivr_redirect':   "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
         'status_redirect':"Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
         'lang_select':    "Londa Ennimi / Choose Language:",
         'invalid':        "Okoze ensobi. Kyeyongere okugezaako.",
@@ -44,7 +46,8 @@ translation_matrix = {
         'opt2':           "2. Mazima omusango gwawe oku guri",
         'opt3':           "3. Hindura Orurimi / Change Language",
         'select_provider':"Toorana kampuni y'esimu eyafiiswaho:",
-        'ivr_redirect':   "Webare. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
+        'select_fraud_type': "Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
+        'ivr_redirect':   "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
         'status_redirect':"Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
         'lang_select':    "Toorana Orurimi / Choose Language:",
         'invalid':        "Okora enshobi. Yegarukemu.",
@@ -92,10 +95,42 @@ def ussd():
                     "2. Airtel Uganda")
 
     elif text == '1*1' or text == '1*2':
-        provider = 'MTN' if text == '1*1' else 'Airtel'
-        response = f"END {t['ivr_redirect']}"
-        # Asynchronously trigger outbound IVR call via microservice hook
-        trigger_outbound_ivr(phone_number, provider, current_lang)
+        provider = 'MTN Uganda' if text == '1*1' else 'Airtel Uganda'
+        response = f"CON {t['select_fraud_type'].format(provider=provider)}"
+
+    elif input_chain[0] == '1' and len(input_chain) == 3:
+        provider_choice = input_chain[1]
+        fraud_choice = input_chain[2]
+        
+        if provider_choice in ['1', '2'] and fraud_choice in ['1', '2', '3']:
+            provider_name = 'MTN Uganda' if provider_choice == '1' else 'Airtel Uganda'
+            
+            # Map fraud types dynamically based on language choice for final response
+            fraud_types = {
+                'en': {
+                    '1': "Unauthorised transaction",
+                    '2': "Scammers pretending to be staff",
+                    '3': "Scammers pretending to have sent money"
+                },
+                'lg': {
+                    '1': "Ssente ezitakkiriziddwa",
+                    '2': "Abafere abeeyita abakozi",
+                    '3': "Abafere abeeyita abakusindikidde ssente"
+                },
+                'rny': {
+                    '1': "Okwiha esente omu buryo butahikire",
+                    '2': "Abashuma abeetwarra nka bakozi",
+                    '3': "Abashuma abeetwarra ngu bakusindikira esente"
+                }
+            }
+            
+            fraud_label = fraud_types[current_lang][fraud_choice]
+            response = f"END {t['ivr_redirect'].format(provider=provider_name, fraud_type=fraud_label)}"
+            
+            # Asynchronously trigger outbound IVR call via microservice hook
+            trigger_outbound_ivr(phone_number, provider_name, current_lang)
+        else:
+            response = f"END {t['invalid']}"
 
     # ---- BRANCH 2: TRACK STATUS ----
     elif text == '2':
