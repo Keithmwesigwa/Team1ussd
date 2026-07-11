@@ -121,7 +121,7 @@ def ussd():
 
         new_lang = user_session_store[phone_number]['lang']
         new_t    = translation_matrix[new_lang]
-        response = f"END {new_t['welcome']} - Configured."
+        response = f"END {new_t['welcome']}."
 
     # ---- FALLBACK ----
     else:
