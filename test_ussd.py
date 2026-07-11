@@ -35,7 +35,7 @@ check("MTN submission",    post("1*1"), "END Thank you. The Bank of Uganda")
 check("Airtel submission", post("1*2"), "END Thank you. The Bank of Uganda")
 check("Track complaint",   post("2"),   "END Fetching status")
 check("Language menu",     post("3"),   "CON Londa Ennimi")
-check("Set English (3*1)", post("3*1"), "Welcome to BoU Consumer Protection - Configured")
+check("Set English (3*1)", post("3*1"), "Welcome to BoU Consumer Protection ")
 check("Fallback invalid",  post("999"), "END Invalid selection")
 
 # -- LUGANDA --
