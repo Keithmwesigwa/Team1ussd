@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USSD Gateway Simulator</title>
+    <title>FraudGuard - Bank of Uganda Protection System</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,13 +43,13 @@
             flex-direction: column;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
             background-attachment: fixed;
         }
 
         header {
-            padding: 1.5rem 2rem;
+            padding: 1.25rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -86,19 +86,22 @@
         }
 
         .badge {
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: #a5b4fc;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .main-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: 1fr 1.3fr;
             gap: 2.5rem;
             padding: 2.5rem;
             max-width: 1400px;
@@ -133,7 +136,7 @@
                 0px 25px 50px -12px rgba(0, 0, 0, 0.5),
                 0px 0px 0px 4px #27272a,
                 0px 0px 0px 8px #18181b,
-                0px 0px 20px 10px rgba(99, 102, 241, 0.15);
+                0px 0px 20px 10px rgba(99, 102, 241, 0.12);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -144,10 +147,9 @@
                 0px 30px 60px -10px rgba(0, 0, 0, 0.6),
                 0px 0px 0px 4px #27272a,
                 0px 0px 0px 8px #18181b,
-                0px 0px 25px 12px rgba(99, 102, 241, 0.25);
+                0px 0px 25px 12px rgba(99, 102, 241, 0.2);
         }
 
-        /* Dynamic Island / Notch */
         .phone-notch {
             position: absolute;
             top: 20px;
@@ -169,7 +171,6 @@
             height: 8px;
             background: #111827;
             border-radius: 50%;
-            box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.2);
         }
 
         .notch-speaker {
@@ -188,11 +189,9 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            font-family: var(--font-main);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Status Bar */
         .status-bar {
             height: 48px;
             padding: 14px 24px 0 24px;
@@ -211,7 +210,6 @@
             gap: 6px;
         }
 
-        /* Screen Content area */
         .screen-content {
             flex: 1;
             display: flex;
@@ -221,7 +219,7 @@
             justify-content: space-between;
         }
 
-        /* Home/Dialer UI */
+        /* Dialer UI */
         .dialer-container {
             display: flex;
             flex-direction: column;
@@ -355,14 +353,14 @@
             color: #fff;
         }
 
-        /* USSD Popup / Dialogue Overlay */
+        /* USSD Popup Dialogue Overlay */
         .ussd-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             z-index: 100;
             display: none;
@@ -387,12 +385,11 @@
         }
 
         .ussd-message {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             line-height: 1.5;
             color: var(--text-main);
             margin-bottom: 1.25rem;
             white-space: pre-wrap;
-            font-family: var(--font-main);
         }
 
         .ussd-input {
@@ -406,7 +403,6 @@
             font-size: 1rem;
             margin-bottom: 1.25rem;
             outline: none;
-            transition: border-color 0.2s;
         }
 
         .ussd-input:focus {
@@ -444,11 +440,7 @@
             color: white;
         }
 
-        .ussd-btn-send:hover {
-            background: var(--accent-primary-hover);
-        }
-
-        /* Config and Log Panels (Right side) */
+        /* Dashboards & Logs Panel */
         .dashboard-section {
             display: flex;
             flex-direction: column;
@@ -477,78 +469,93 @@
             color: var(--accent-primary);
         }
 
-        /* Config fields */
-        .form-grid {
+        /* Portal Navigation Cards Grid */
+        .portal-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
         }
 
-        @media (max-width: 576px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .form-group {
+        .portal-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
 
-        .form-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .portal-card:hover {
+            background: rgba(99, 102, 241, 0.06);
+            border-color: rgba(99, 102, 241, 0.25);
+            transform: translateY(-2px);
         }
 
-        .form-input {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 0.75rem;
+        .portal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
             color: #fff;
-            font-family: var(--font-main);
-            outline: none;
-            transition: all 0.2s;
         }
 
-        .form-input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        .portal-header.user i { color: #0d9488; }
+        .portal-header.mtn i { color: #facc15; }
+        .portal-header.airtel i { color: #ef4444; }
+        .portal-header.bou i { color: #d97706; }
+
+        .portal-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
         }
 
-        /* Session State Tracker */
-        .state-grid {
+        /* Demo Guides */
+        .guide-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 0.75rem;
         }
 
-        .state-box {
-            background: rgba(0, 0, 0, 0.2);
+        .guide-card {
+            background: rgba(255, 255, 255, 0.01);
             border: 1px solid rgba(255, 255, 255, 0.03);
             border-radius: 10px;
             padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
             text-align: center;
         }
 
-        .state-value {
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
+        .guide-card:hover {
+            background: rgba(99, 102, 241, 0.04);
+            border-color: rgba(99, 102, 241, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .guide-title {
+            font-size: 0.75rem;
+            font-weight: 700;
             color: #fff;
-            margin-top: 0.25rem;
-            word-break: break-all;
+            margin-bottom: 0.2rem;
+        }
+
+        .guide-desc {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.3;
         }
 
         /* Live Logger */
         .log-container {
             display: flex;
             flex-direction: column;
-            height: 320px;
+            height: 260px;
         }
 
         .log-header {
@@ -596,38 +603,27 @@
             border-left: 3px solid var(--accent-primary);
             padding-left: 0.75rem;
             margin-bottom: 0.5rem;
-            animation: logFadeIn 0.3s ease;
         }
 
-        @keyframes logFadeIn {
-            from { opacity: 0; transform: translateX(-5px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .log-item.error {
-            border-left-color: var(--accent-danger);
-        }
-
-        .log-item.success {
-            border-left-color: var(--accent-success);
-        }
+        .log-item.error { border-left-color: var(--accent-danger); }
+        .log-item.success { border-left-color: var(--accent-success); }
 
         .log-time-stamp {
             color: var(--text-muted);
             font-size: 0.7rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
         }
 
         .log-meta {
             display: flex;
             gap: 0.5rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
             font-weight: 600;
         }
 
         .log-payload {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.02);
             border-radius: 6px;
             padding: 0.5rem;
             white-space: pre-wrap;
@@ -651,69 +647,39 @@
             gap: 0.5rem;
         }
 
-        /* Demo Guides */
-        .guide-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        @media (max-width: 576px) {
-            .guide-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .guide-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .guide-card:hover {
-            background: rgba(99, 102, 241, 0.05);
-            border-color: rgba(99, 102, 241, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .guide-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 0.25rem;
+        .config-bar {
             display: flex;
-            align-items: center;
-            gap: 6px;
+            gap: 1rem;
+            margin-top: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            padding: 0.75rem;
+            border-radius: 12px;
         }
 
-        .guide-title i {
-            font-size: 0.9rem;
-            color: var(--accent-success);
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
         }
 
-        .guide-desc {
-            font-size: 0.75rem;
+        .config-label {
+            font-size: 0.65rem;
+            font-weight: 700;
             color: var(--text-muted);
-            line-height: 1.4;
+            text-transform: uppercase;
         }
 
-        /* Scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
+        .config-input {
             background: var(--bg-tertiary);
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            padding: 0.4rem;
+            color: #fff;
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            outline: none;
         }
     </style>
 </head>
@@ -721,14 +687,17 @@
     <header>
         <div class="logo-container">
             <div class="logo-icon">
-                <i data-lucide="smartphone"></i>
+                <i data-lucide="shield-check"></i>
             </div>
             <div>
-                <h1>USSD Simulator</h1>
-                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">Powered by Flask & Vercel</div>
+                <h1>FraudGuard Portal Hub</h1>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">Bank of Uganda protect Engine</div>
             </div>
         </div>
-        <div class="badge">Local Environment</div>
+        <div class="badge">
+            <i data-lucide="radio" style="width: 12px; height: 12px; animation: pulse 1.5s infinite;"></i> 
+            Ledger Online
+        </div>
     </header>
 
     <div class="main-container">
@@ -795,9 +764,7 @@
                         <!-- USSD Dialog Screen Overlay -->
                         <div class="ussd-overlay" id="ussd-overlay">
                             <div class="ussd-modal">
-                                <div class="ussd-message" id="ussd-msg">CON What would you want to check 
-1. My Account 
-2. My phone number</div>
+                                <div class="ussd-message" id="ussd-msg">Connecting...</div>
                                 <div id="ussd-input-container">
                                     <input type="text" class="ussd-input" id="ussd-input" placeholder="Enter option..." autocomplete="off">
                                 </div>
@@ -812,63 +779,72 @@
             </div>
         </div>
 
-        <!-- CONFIGURATION & LOGGING PANEL -->
+        <!-- DASHBOARD NAVIGATION & API LOGS -->
         <div class="dashboard-section">
-            <!-- Simulator Config -->
+            <!-- Portals Grid -->
             <div class="glass-card">
                 <div class="section-title">
-                    <i data-lucide="sliders"></i> Simulator Configuration
+                    <i data-lucide="layout-grid"></i> Enterprise Protection Portals
                 </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" class="form-input" id="cfg-phone" value="+256770123456">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">USSD Service Code</label>
-                        <input type="text" class="form-input" id="cfg-code" value="*254#">
-                    </div>
-                </div>
+                <div class="portal-grid">
+                    <a href="/user" class="portal-card">
+                        <div class="portal-header user">
+                            <i data-lucide="user"></i> Consumer Portal
+                        </div>
+                        <div class="portal-desc">Citizens can file official mobile money scam complaints and track resolution status.</div>
+                    </a>
+                    
+                    <a href="/provider/MTN" class="portal-card">
+                        <div class="portal-header mtn">
+                            <i data-lucide="smartphone"></i> MTN Uganda Desk
+                        </div>
+                        <div class="portal-desc">Compliance workspace for MTN officers to review, investigate, and resolve issues.</div>
+                    </a>
 
-                <div class="state-grid">
-                    <div class="state-box">
-                        <div class="form-label" style="font-size: 0.65rem;">Session ID</div>
-                        <div class="state-value" id="state-session-id">-</div>
-                    </div>
-                    <div class="state-box">
-                        <div class="form-label" style="font-size: 0.65rem;">Text Path</div>
-                        <div class="state-value" id="state-text-path">-</div>
-                    </div>
-                    <div class="state-box">
-                        <div class="form-label" style="font-size: 0.65rem;">Active</div>
-                        <div class="state-value" id="state-active" style="color: var(--accent-danger);">No</div>
-                    </div>
+                    <a href="/provider/Airtel" class="portal-card">
+                        <div class="portal-header airtel">
+                            <i data-lucide="smartphone"></i> Airtel Uganda Desk
+                        </div>
+                        <div class="portal-desc">Compliance workspace for Airtel officers to review, investigate, and resolve issues.</div>
+                    </a>
+
+                    <a href="/bou" class="portal-card">
+                        <div class="portal-header bou">
+                            <i data-lucide="building-2"></i> Bank of Uganda
+                        </div>
+                        <div class="portal-desc">Supervisor control room to oversee compliance, resolve disputes, and flag SLA breaches.</div>
+                    </a>
                 </div>
             </div>
 
-            <!-- Demo Guides / Presets -->
+            <!-- Presets -->
             <div class="glass-card">
                 <div class="section-title">
-                    <i data-lucide="book-open"></i> Quick Scenarios
+                    <i data-lucide="play-circle"></i> Quick USSD Preset Flows
                 </div>
                 <div class="guide-grid">
                     <div class="guide-card" onclick="loadPreset('*254#', '1*1')">
-                        <div class="guide-title">
-                            <i data-lucide="shield-alert"></i> Report MTN Fraud
-                        </div>
-                        <div class="guide-desc">Initial dial (*254#) -> Report Mobile Money Fraud (1) -> MTN Uganda (1). Triggers voice IVR callback.</div>
+                        <div class="guide-title">MTN Fraud</div>
+                        <div class="guide-desc">Report MTN mobile money fraud.</div>
                     </div>
                     <div class="guide-card" onclick="loadPreset('*254#', '2')">
-                        <div class="guide-title">
-                            <i data-lucide="activity"></i> Track Complaint
-                        </div>
-                        <div class="guide-desc">Initial dial (*254#) -> Track Active Complaint (2). Queries database and triggers outbound status voice call.</div>
+                        <div class="guide-title">Track Status</div>
+                        <div class="guide-desc">Initiate automated voice status check.</div>
                     </div>
                     <div class="guide-card" onclick="loadPreset('*254#', '3*2')">
-                        <div class="guide-title">
-                            <i data-lucide="languages"></i> Luganda Language
-                        </div>
-                        <div class="guide-desc">Initial dial (*254#) -> Change Language (3) -> Luganda (2). Updates language profile on backend.</div>
+                        <div class="guide-title">Luganda Ennimi</div>
+                        <div class="guide-desc">Update user language configuration.</div>
+                    </div>
+                </div>
+
+                <div class="config-bar">
+                    <div class="config-group">
+                        <span class="config-label">Phone Number</span>
+                        <input type="text" class="config-input" id="cfg-phone" value="+256770123456">
+                    </div>
+                    <div class="config-group">
+                        <span class="config-label">USSD Service Code</span>
+                        <input type="text" class="config-input" id="cfg-code" value="*254#">
                     </div>
                 </div>
             </div>
@@ -877,16 +853,16 @@
             <div class="glass-card log-container">
                 <div class="log-header">
                     <div class="section-title" style="margin-bottom: 0;">
-                        <i data-lucide="terminal"></i> API Request Logs
+                        <i data-lucide="terminal"></i> Telephony Ingestion Logs (AT Endpoint)
                     </div>
                     <button class="clear-logs-btn" onclick="clearLogs()">
-                        <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Clear Logs
+                        <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Clear
                     </button>
                 </div>
                 <div class="log-list" id="log-list">
                     <div class="empty-logs" id="empty-logs">
-                        <i data-lucide="database" style="width: 2rem; height: 2rem;"></i>
-                        <span>No logs yet. Start a session to view traffic.</span>
+                        <i data-lucide="database" style="width: 1.5rem; height: 1.5rem;"></i>
+                        <span>Ingestion pipeline idle. Dial USSD simulator to trigger.</span>
                     </div>
                 </div>
             </div>
@@ -894,7 +870,6 @@
     </div>
 
     <script>
-        // Initialize Lucide Icons
         lucide.createIcons();
 
         // State variables
@@ -910,7 +885,7 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            hours = hours ? hours : 12; 
             const timeString = `${hours}:${minutes}`;
             const timeWithAmpm = `${hours}:${minutes} ${ampm}`;
 
@@ -920,7 +895,6 @@
         setInterval(updateTime, 1000);
         updateTime();
 
-        // Phone Dialer controls
         const dialDisplay = document.getElementById('dialer-val');
         
         function pressKey(key) {
@@ -943,9 +917,7 @@
             document.getElementById('cfg-code').value = code;
             dialDisplay.textContent = code;
             
-            // Auto trigger session
             startUssdSession().then(() => {
-                // If it is a multiple step preset
                 const steps = path.split('*');
                 let stepDelay = 800;
                 
@@ -971,14 +943,14 @@
             item.className = `log-item ${type}`;
 
             const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(2, '0')}`;
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
             item.innerHTML = `
                 <div class="log-time-stamp">${timeStr}</div>
                 <div class="log-meta">${title}</div>
-                <div>${text}</div>
-                ${payload ? `<div class="log-payload"><strong>POST Request Data:</strong>\n${payload}</div>` : ''}
-                ${response ? `<div class="log-response"><strong>API Response:</strong> ${response}</div>` : ''}
+                <div style="font-size: 0.75rem;">${text}</div>
+                ${payload ? `<div class="log-payload"><strong>POST Payload:</strong>\n${payload}</div>` : ''}
+                ${response ? `<div class="log-response"><strong>AT HTTP 200:</strong> ${response}</div>` : ''}
             `;
 
             logList.appendChild(item);
@@ -989,16 +961,15 @@
             const logList = document.getElementById('log-list');
             logList.innerHTML = `
                 <div class="empty-logs" id="empty-logs">
-                    <i data-lucide="database" style="width: 2rem; height: 2rem;"></i>
-                    <span>No logs yet. Start a session to view traffic.</span>
+                    <i data-lucide="database" style="width: 1.5rem; height: 1.5rem;"></i>
+                    <span>Ingestion pipeline idle. Dial USSD simulator to trigger.</span>
                 </div>
             `;
             lucide.createIcons();
         }
 
-        // Generate Random Session ID
         function generateSessionId() {
-            return "session_" + Math.random().toString(36).substring(2, 15);
+            return "session_" + Math.random().toString(36).substring(2, 10);
         }
 
         // USSD Communications
@@ -1011,27 +982,17 @@
                 return;
             }
 
-            // Reset USSD tracking state
             isSessionActive = true;
             currentSessionId = generateSessionId();
             textHistory = [];
             
-            // Sync status display
-            document.getElementById('state-session-id').textContent = currentSessionId.substring(0, 10) + "...";
-            document.getElementById('state-text-path').textContent = '""';
-            const activeStatus = document.getElementById('state-active');
-            activeStatus.textContent = "Yes";
-            activeStatus.style.color = "var(--accent-success)";
-
-            // Show USSD Overlay
             document.getElementById('ussd-overlay').style.display = 'flex';
             document.getElementById('ussd-input-container').style.display = 'block';
             document.getElementById('ussd-input').value = "";
             document.getElementById('ussd-input').focus();
             document.getElementById('ussd-send-btn').style.display = 'inline-block';
-            document.getElementById('ussd-msg').textContent = "Connecting to USSD server...";
+            document.getElementById('ussd-msg').textContent = "Connecting to USSD Gateway...";
 
-            // API Call
             await queryUssdAPI(currentSessionId, serviceCode, phoneNumber, "");
         }
 
@@ -1040,14 +1001,11 @@
 
             const inputVal = document.getElementById('ussd-input').value.trim();
             
-            // In USSD gateway, all inputs are joined with '*'
             if (inputVal !== "") {
                 textHistory.push(inputVal);
             }
             const combinedText = textHistory.join('*');
-            document.getElementById('state-text-path').textContent = combinedText === "" ? '""' : combinedText;
 
-            // Reset input field
             document.getElementById('ussd-input').value = "";
             document.getElementById('ussd-input').focus();
 
@@ -1059,29 +1017,23 @@
 
         function cancelSession() {
             if (!isSessionActive) return;
-            
-            addLog('error', 'SESSION CANCELLED', 'User cancelled the USSD dialog.', null, null);
+            addLog('error', 'USSD CANCELLED', 'User cancelled session dialogue.', null, null);
             endSession();
         }
 
         function endSession() {
             isSessionActive = false;
             document.getElementById('ussd-overlay').style.display = 'none';
-            document.getElementById('state-active').textContent = "No";
-            document.getElementById('state-active').style.color = "var(--accent-danger)";
-            document.getElementById('state-session-id').textContent = "-";
-            document.getElementById('state-text-path').textContent = "-";
         }
 
         async function queryUssdAPI(sessionId, serviceCode, phoneNumber, textPath) {
-            // Setup details for request body
             const formData = new URLSearchParams();
             formData.append('sessionId', sessionId);
             formData.append('serviceCode', serviceCode);
             formData.append('phoneNumber', phoneNumber);
             formData.append('text', textPath);
 
-            const requestBodyStr = `sessionId=${sessionId}\nserviceCode=${serviceCode}\nphoneNumber=${phoneNumber}\ntext="${textPath}"`;
+            const requestBodyStr = `sessionId=${sessionId}&serviceCode=${serviceCode}&phoneNumber=${phoneNumber}&text=${textPath}`;
             
             try {
                 const response = await fetch(serverUrl, {
@@ -1092,46 +1044,37 @@
                     body: formData
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const responseText = await response.text();
                 
-                // Print to logs
-                addLog('success', 'POST ' + serverUrl, 'Received response from server.', requestBodyStr, responseText);
+                addLog('success', 'POST /ussd', 'USSD Ingestion OK', requestBodyStr, responseText);
 
-                // Handle USSD protocol
                 if (responseText.startsWith("CON ")) {
                     const messageContent = responseText.substring(4);
                     document.getElementById('ussd-msg').textContent = messageContent;
                 } else if (responseText.startsWith("END ")) {
                     const messageContent = responseText.substring(4);
                     document.getElementById('ussd-msg').textContent = messageContent;
-                    // Hide the input since session is completed
                     document.getElementById('ussd-input-container').style.display = 'none';
                     document.getElementById('ussd-send-btn').style.display = 'none';
                     
-                    // Add OK / Dismiss button behavior instead
                     setTimeout(() => {
                         if (isSessionActive) {
-                            addLog('info', 'SESSION ENDED', 'USSD gateway sent END instruction.', null, null);
                             endSession();
                         }
-                    }, 4000);
+                    }, 5000);
                 } else {
-                    // Plain text response fallback
                     document.getElementById('ussd-msg').textContent = responseText;
                 }
 
             } catch (error) {
-                console.error("API request failed:", error);
+                console.error("API error:", error);
                 document.getElementById('ussd-msg').textContent = "Connection error:\n" + error.message;
-                addLog('error', 'API CONNECTION ERROR', error.message, requestBodyStr, null);
+                addLog('error', 'INGESTION FAILURE', error.message, requestBodyStr, null);
             }
         }
 
-        // Support hitting Enter in the USSD Input Field
         document.getElementById('ussd-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendChoice();

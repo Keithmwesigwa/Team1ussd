@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank of Uganda Oversight Portal - FraudGuard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --accent-gold: #d97706; /* BoU Gold */
+            --accent-gold-hover: #b45309;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-navy: #1e3a8a;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(17, 24, 39, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(217, 119, 6, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(30, 58, 138, 0.2) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        header {
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(11, 15, 25, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #b45309 100%);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            box-shadow: 0 0 15px rgba(217, 119, 6, 0.3);
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 550px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .kpi-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-icon.total {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .kpi-icon.active {
+            background: rgba(217, 119, 6, 0.12);
+            color: var(--accent-gold);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+        }
+        .kpi-icon.resolved {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .kpi-icon.breached {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+        }
+
+        .kpi-val {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Two Column Panel: Analytics Bars & Table */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Progress bars comparison */
+        .stat-row {
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-name {
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-number {
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            height: 12px;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fill-mtn {
+            background: linear-gradient(90deg, #fef08a 0%, #eab308 100%);
+        }
+
+        .fill-airtel {
+            background: linear-gradient(90deg, #fca5a5 0%, #dc2626 100%);
+        }
+
+        /* Custom Table Design */
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem;
+            border-bottom: 2px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1.15rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+            color: #fff;
+        }
+
+        .ticket-id {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pill-PENDING {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+        .pill-UNDER_INVESTIGATION {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+        .pill-RESOLVED {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+        }
+
+        .provider-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-MTN {
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            color: #fef08a;
+        }
+
+        .badge-Airtel {
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #fca5a5;
+        }
+
+        /* SLA Timer Badge */
+        .sla-timer {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .sla-remaining {
+            color: var(--text-muted);
+        }
+        .sla-breached {
+            color: var(--accent-danger);
+            animation: pulse 2s infinite;
+            font-weight: 700;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Escalation controls */
+        .btn-escalate {
+            background: rgba(217, 119, 6, 0.12);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            color: var(--accent-gold);
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-escalate:hover {
+            background: var(--accent-gold);
+            color: #fff;
+            border-color: var(--accent-gold);
+        }
+
+        .escalated-active {
+            color: var(--accent-danger);
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .empty-table {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i data-lucide="building"></i>
+            </div>
+            <div>
+                <h1>Bank of Uganda</h1>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">Consumer Protection Supervisory Desk</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="/" class="nav-btn">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Return to Hub
+            </a>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- KPI METRICS GRID -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon total">
+                    <i data-lucide="database"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-total">0</div>
+                    <div class="kpi-label">Total System Reports</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon active">
+                    <i data-lucide="loader"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-active">0</div>
+                    <div class="kpi-label">Active Disputes</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon resolved">
+                    <i data-lucide="check-square"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-resolved">0</div>
+                    <div class="kpi-label">Resolved cases</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon breached">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-breached">0</div>
+                    <div class="kpi-label">SLA Overdue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS COMPARISON -->
+        <div class="analytics-grid">
+            <!-- MTN Performance -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span>MTN Uganda Resolution Rate</span>
+                    <i data-lucide="award" style="color: #eab308;"></i>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-header">
+                        <span class="stat-name"><i data-lucide="shield-check" style="width: 14px; height: 14px; color: var(--accent-success);"></i> Resolved Cases</span>
+                        <span class="stat-number" id="mtn-resolved-label">0 / 0</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill fill-mtn" id="mtn-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    MTN Uganda is legally mandated to resolve all consumer MM fraud complaints within 48 hours. Bank of Uganda audits progress periodically.
+                </div>
+            </div>
+
+            <!-- Airtel Performance -->
+            <div class="glass-card">
+                <div class="card-title">
+                    <span>Airtel Uganda Resolution Rate</span>
+                    <i data-lucide="award" style="color: #dc2626;"></i>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-header">
+                        <span class="stat-name"><i data-lucide="shield-check" style="width: 14px; height: 14px; color: var(--accent-success);"></i> Resolved Cases</span>
+                        <span class="stat-number" id="airtel-resolved-label">0 / 0</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill fill-airtel" id="airtel-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    Airtel Uganda is legally mandated to resolve all consumer MM fraud complaints within 48 hours. Bank of Uganda audits progress periodically.
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLAINTS MASTER TABLE CARD -->
+        <div class="glass-card">
+            <div class="card-title">
+                <span>Centralized USSD & Web Audit Trail</span>
+                <span class="nav-btn" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;" onclick="loadGlobalData()">
+                    <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Refresh
+                </span>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Subscriber Line</th>
+                            <th>MNO Provider</th>
+                            <th>Fraud Type</th>
+                            <th>Amount</th>
+                            <th>Created On</th>
+                            <th>Status</th>
+                            <th>SLA status</th>
+                            <th>Oversight Intervention</th>
+                        </tr>
+                    </thead>
+                    <tbody id="master-list">
+                        <!-- Dynamic items -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Load Global Data on Mount
+        loadGlobalData();
+
+        async function loadGlobalData() {
+            try {
+                // Fetch stats and lists
+                const statsResponse = await fetch('/api/stats');
+                const listResponse = await fetch('/api/complaints');
+                
+                if (!statsResponse.ok || !listResponse.ok) throw new Error("Failed to load audit logs.");
+                
+                const stats = await statsResponse.json();
+                const list = await listResponse.json();
+                
+                renderKPIs(stats);
+                renderAnalytics(stats);
+                renderTable(list);
+
+            } catch (error) {
+                alert("Error reloading oversight data: " + error.message);
+            }
+        }
+
+        function renderKPIs(stats) {
+            document.getElementById('kpi-total').textContent = stats.total;
+            document.getElementById('kpi-active').textContent = stats.active;
+            document.getElementById('kpi-resolved').textContent = stats.resolved;
+            document.getElementById('kpi-breached').textContent = stats.breached;
+        }
+
+        function renderAnalytics(stats) {
+            // MTN Bar
+            const mtnRate = stats.mtn_total > 0 ? (stats.mtn_resolved / stats.mtn_total) * 100 : 0;
+            document.getElementById('mtn-bar').style.width = `${mtnRate}%`;
+            document.getElementById('mtn-resolved-label').textContent = `${stats.mtn_resolved} / ${stats.mtn_total} (${Math.round(mtnRate)}%)`;
+
+            // Airtel Bar
+            const airtelRate = stats.airtel_total > 0 ? (stats.airtel_resolved / stats.airtel_total) * 100 : 0;
+            document.getElementById('airtel-bar').style.width = `${airtelRate}%`;
+            document.getElementById('airtel-resolved-label').textContent = `${stats.airtel_resolved} / ${stats.airtel_total} (${Math.round(airtelRate)}%)`;
+        }
+
+        function renderTable(complaints) {
+            const tbody = document.getElementById('master-list');
+            tbody.innerHTML = '';
+
+            if (complaints.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-table">
+                            <i data-lucide="database" style="width: 2rem; height: 2rem; margin-bottom: 0.5rem; display: inline-block;"></i>
+                            <br>No fraud complaints found in the centralized ledger.
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const now = new Date();
+
+            complaints.forEach(c => {
+                const tr = document.createElement('tr');
+                const createdDate = new Date(c.created_at).toLocaleDateString();
+                const deadline = new Date(c.sla_deadline);
+                
+                // SLA Remaining Logic
+                let slaHtml = '';
+                let isOverdue = false;
+                if (c.status === 'RESOLVED') {
+                    slaHtml = '<span class="sla-remaining">Completed</span>';
+                } else if (now > deadline) {
+                    slaHtml = '<span class="sla-breached">SLA BREACHED</span>';
+                    isOverdue = true;
+                } else {
+                    const diffMs = deadline - now;
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    slaHtml = `<span class="sla-remaining">${diffHours}h remaining</span>`;
+                }
+
+                // Action Escalation logic
+                let actionHtml = '';
+                if (c.escalated === 1) {
+                    actionHtml = `
+                        <span class="escalated-active">
+                            <i data-lucide="alert-octagon" style="width: 14px; height: 14px;"></i> BoU Escalated
+                        </span>
+                    `;
+                } else if (c.status !== 'RESOLVED' && isOverdue) {
+                    actionHtml = `
+                        <button class="btn-escalate" onclick="escalateCase('${c.id}')">
+                            <i data-lucide="shield-alert" style="width: 12px; height: 12px;"></i> Flag / Escalate
+                        </button>
+                    `;
+                } else {
+                    actionHtml = '<span style="color: var(--text-muted); font-size: 0.8rem;">Oversight Idle</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="ticket-id">${c.id}</td>
+                    <td>${c.phone_number}</td>
+                    <td><span class="provider-badge badge-${c.provider}">${c.provider}</span></td>
+                    <td>${c.fraud_type}</td>
+                    <td>${Number(c.amount).toLocaleString()} UGX</td>
+                    <td>${createdDate}</td>
+                    <td><span class="status-pill pill-${c.status}">${c.status.replace(/_/g, ' ')}</span></td>
+                    <td>${slaHtml}</td>
+                    <td>${actionHtml}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        async function escalateCase(id) {
+            if (!confirm(`Are you sure you want to trigger central bank escalation for ticket ${id}? This alerts the provider's executive compliance desk.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/complaints/${id}/escalate`, { method: 'POST' });
+                if (!response.ok) throw new Error("Failed to escalate ticket.");
+                
+                loadGlobalData();
+
+            } catch (error) {
+                alert("Error escalating ticket: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,17 +1,115 @@
 import os
-from flask import Flask, request, render_template, make_response
+import random
+from flask import Flask, request, render_template, make_response, jsonify
+
+# Fallback import logic for local running and Vercel serverless execution
+try:
+    from database import (
+        init_db, create_complaint, get_complaint, get_all_complaints,
+        get_provider_complaints, update_status, escalate_complaint, get_stats
+    )
+except ImportError:
+    from api.database import (
+        init_db, create_complaint, get_complaint, get_all_complaints,
+        get_provider_complaints, update_status, escalate_complaint, get_stats
+    )
 
 # Define explicit template directory relative to this script for Vercel Serverless Functions
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
 app = Flask(__name__, template_folder=template_dir)
 
+# Initialize database on application startup
+init_db()
+
+# --- WEB PORTALS ---
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/user')
+def user_portal():
+    return render_template('user.html')
+
+@app.route('/provider/<provider_name>')
+def provider_portal(provider_name):
+    # Ensure provider is uppercase
+    p_name = provider_name.upper()
+    if p_name not in ['MTN', 'AIRTEL']:
+        return "Invalid Provider Desk", 404
+    return render_template('provider.html', provider_name=p_name)
+
+@app.route('/bou')
+def bou_portal():
+    return render_template('bou.html')
+
+# --- API ENDPOINTS ---
+
+@app.route('/api/complaints', methods=['POST'])
+def api_create_complaint():
+    phone_number = request.values.get("phone_number")
+    provider = request.values.get("provider")
+    fraud_type = request.values.get("fraud_type")
+    amount = request.values.get("amount", 0.0)
+    notes = request.values.get("notes", "")
+
+    if not phone_number or not provider or not fraud_type:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    # Generate a unique Incident ID: FG-XXXX
+    complaint_id = f"FG-{random.randint(1000, 9999)}"
+    while get_complaint(complaint_id) is not None:
+        complaint_id = f"FG-{random.randint(1000, 9999)}"
+
+    # Save to SQLite
+    create_complaint(complaint_id, phone_number, provider, fraud_type, amount, language='Web')
+    
+    # Update notes
+    if notes:
+        update_status(complaint_id, 'PENDING', notes)
+
+    return jsonify({"id": complaint_id})
+
+@app.route('/api/complaints', methods=['GET'])
+def api_get_all_complaints():
+    return jsonify(get_all_complaints())
+
+@app.route('/api/complaints/<complaint_id>', methods=['GET'])
+def api_get_complaint(complaint_id):
+    complaint = get_complaint(complaint_id)
+    if not complaint:
+        return jsonify({"error": "Complaint not found"}), 404
+    return jsonify(complaint)
+
+@app.route('/api/provider/<provider_name>/complaints', methods=['GET'])
+def api_get_provider_complaints(provider_name):
+    p_name = provider_name.upper()
+    return jsonify(get_provider_complaints(p_name))
+
+@app.route('/api/complaints/<complaint_id>/status', methods=['POST'])
+def api_update_status(complaint_id):
+    status = request.values.get("status")
+    notes = request.values.get("notes")
+    
+    if not status or not notes:
+        return jsonify({"error": "Missing status or notes"}), 400
+
+    update_status(complaint_id, status, notes)
+    return jsonify({"status": "success"})
+
+@app.route('/api/complaints/<complaint_id>/escalate', methods=['POST'])
+def api_escalate(complaint_id):
+    escalate_complaint(complaint_id)
+    return jsonify({"status": "success"})
+
+@app.route('/api/stats', methods=['GET'])
+def api_get_stats():
+    return jsonify(get_stats())
+
+# --- USSD WEBHOOK ---
+
 @app.route("/ussd", methods=['POST'])
 def ussd():
-    # 1. Read the variables sent via POST from our API
     session_id   = request.values.get("sessionId", None)
     serviceCode  = request.values.get("serviceCode", None)
     phone_number = request.values.get("phoneNumber", None)
@@ -19,7 +117,6 @@ def ussd():
 
     response = ""
 
-    # 2. Clean up the incoming input path string
     if text == '':
         response = ("CON BoU Consumer Protection\n"
                     "1. Report Mobile Money Fraud\n"
@@ -34,15 +131,38 @@ def ussd():
                     
     elif text == '1*1' or text == '1*2':
         provider = 'MTN' if text == '1*1' else 'Airtel'
-        response = (f"END Thank you. The Bank of Uganda platform is calling your number ({phone_number}) "
-                    "immediately to record your voice complaint. Please hang up and answer the incoming call.")
         
-        # Trigger background microservices asynchronously
+        # Generate a unique Incident ID: FG-XXXX for the USSD ticket
+        complaint_id = f"FG-{random.randint(1000, 9999)}"
+        while get_complaint(complaint_id) is not None:
+            complaint_id = f"FG-{random.randint(1000, 9999)}"
+            
+        # Create a database record for this USSD filing
+        create_complaint(
+            complaint_id, phone_number, provider, 'Mobile Money Fraud', 0.0, language='USSD'
+        )
+        update_status(complaint_id, 'PENDING', f"[USSD Ingestion] Citizen reported {provider} MM fraud from handset.")
+        
+        response = (f"END Thank you. The Bank of Uganda platform is calling your number ({phone_number}) "
+                    f"immediately to record your voice complaint. Ticket: {complaint_id}.")
+        
+        # Trigger background microservices
         trigger_ivr_voice_callback(phone_number, provider, session_id)
 
     # --- BRANCH 2: TRACK COMPLAINT ---
     elif text == '2':
-        response = "END Fetching your status. You will receive an automated voice call detailing your active dispute shortly."
+        # Lookup database for active complaints associated with this phone number
+        all_cases = get_all_complaints()
+        user_cases = [c for c in all_cases if c['phone_number'] == phone_number]
+        
+        if len(user_cases) > 0:
+            # Show status of the most recent complaint
+            latest = user_cases[0]
+            status_clean = latest['status'].replace('_', ' ')
+            response = f"END Active Case ({latest['id']}): {status_clean}.\nDetails: {latest['notes'][:40]}..."
+        else:
+            response = f"END No active complaints found for your phone number ({phone_number})."
+            
         trigger_status_audio_call(phone_number)
 
     # --- BRANCH 3: LANGUAGE PREFERENCE ---
@@ -68,7 +188,6 @@ def ussd():
     else:
         response = f"END Invalid entry selection. Please redial {serviceCode}"
 
-    # 3. Respond to the MNO gateway with raw plain text
     resp = make_response(response)
     resp.headers['Content-Type'] = 'text/plain'
     return resp

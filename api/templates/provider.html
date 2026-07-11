@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ provider_name }} Compliance Dashboard - FraudGuard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #06070a;
+            --bg-secondary: #0f1016;
+            --bg-tertiary: #161822;
+            
+            /* Theme overrides dynamically injected via Flask */
+            {% if provider_name == 'MTN' %}
+            --accent-theme: #eab308; /* MTN Yellow */
+            --accent-theme-hover: #ca8a04;
+            --logo-bg: #1e1b4b;
+            --logo-fg: #facc15;
+            {% else %}
+            --accent-theme: #dc2626; /* Airtel Red */
+            --accent-theme-hover: #b91c1c;
+            --logo-bg: #f8fafc;
+            --logo-fg: #dc2626;
+            {% endif %}
+
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(15, 16, 22, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(30, 41, 59, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(220, 38, 38, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        header {
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(6, 7, 10, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-icon {
+            background: var(--logo-bg);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--logo-fg);
+            font-weight: 800;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.1);
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 550px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .kpi-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-icon.assigned {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .kpi-icon.pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .kpi-icon.resolved {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .kpi-icon.breached {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+        }
+
+        .kpi-val {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Complaints List Card */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Custom Table Design */
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem;
+            border-bottom: 2px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1.15rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+            color: #fff;
+        }
+
+        .ticket-id {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent-theme);
+        }
+
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pill-PENDING {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+        }
+        .pill-UNDER_INVESTIGATION {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+        }
+        .pill-RESOLVED {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+        }
+
+        /* Escalated Flag */
+        .escalated-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.25rem 0.5rem;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* SLA Timer Badge */
+        .sla-timer {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sla-remaining {
+            color: var(--text-muted);
+        }
+        .sla-breached {
+            color: var(--accent-danger);
+            animation: pulse 2s infinite;
+            font-weight: 700;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Action button */
+        .btn-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-theme);
+            border-color: var(--accent-theme);
+            color: #000;
+        }
+
+        .empty-table {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 0;
+        }
+
+        /* Action Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .form-select, .form-textarea {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: #fff;
+            font-family: var(--font-main);
+            outline: none;
+            width: 100%;
+        }
+
+        .form-textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .form-select:focus, .form-textarea:focus {
+            border-color: var(--accent-theme);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-modal {
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-modal-cancel {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--glass-border);
+        }
+        .btn-modal-cancel:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .btn-modal-save {
+            background: var(--accent-theme);
+            color: #000;
+        }
+        .btn-modal-save:hover {
+            background: var(--accent-theme-hover);
+        }
+
+        .incident-desc-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                {{ provider_name[0] }}
+            </div>
+            <div>
+                <h1>{{ provider_name }} Compliance Center</h1>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;">FraudGuard Telephony Interop</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="/" class="nav-btn">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Return to Hub
+            </a>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- KPI METRICS GRID -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon assigned">
+                    <i data-lucide="inbox"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-total">0</div>
+                    <div class="kpi-label">Total Assigned</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon pending">
+                    <i data-lucide="clock"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-pending">0</div>
+                    <div class="kpi-label">Pending Review</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon resolved">
+                    <i data-lucide="check-circle-2"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-resolved">0</div>
+                    <div class="kpi-label">Resolved cases</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon breached">
+                    <i data-lucide="alert-octagon"></i>
+                </div>
+                <div>
+                    <div class="kpi-val" id="kpi-breached">0</div>
+                    <div class="kpi-label">SLA Overdue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLAINTS TABLE CARD -->
+        <div class="glass-card">
+            <div class="card-title">
+                <span>Assigned Consumer Fraud Complaints</span>
+                <span class="nav-btn" style="font-size: 0.75rem; padding: 0.25rem 0.75rem;" onclick="loadComplaints()">
+                    <i data-lucide="rotate-cw" style="width: 12px; height: 12px;"></i> Refresh
+                </span>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Subscriber Line</th>
+                            <th>Fraud Type</th>
+                            <th>Amount</th>
+                            <th>Created On</th>
+                            <th>SLA Limit</th>
+                            <th>Status</th>
+                            <th>Oversight</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaints-list">
+                        <!-- Dynamic items -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPDATE STATUS MODAL -->
+    <div class="modal-overlay" id="status-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>Update Incident Status</span>
+                <button class="modal-close" onclick="closeModal()">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem;">Case Details</label>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-theme); margin-bottom: 0.25rem;" id="modal-case-id">FG-XXXX</div>
+                <div class="incident-desc-box" id="modal-case-desc">Description will appear here...</div>
+            </div>
+
+            <form id="modal-form" onsubmit="submitStatusUpdate(event)">
+                <input type="hidden" id="modal-hidden-id">
+                
+                <div class="form-group">
+                    <label class="form-label">New Status</label>
+                    <select class="form-select" id="modal-status" required>
+                        <option value="PENDING">Pending Review</option>
+                        <option value="UNDER_INVESTIGATION">Under Investigation</option>
+                        <option value="RESOLVED">Resolved / Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Compliance Resolution Notes</label>
+                    <textarea class="form-textarea" id="modal-notes" placeholder="Enter findings, action taken, reverse txn hashes, etc..." required></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-modal btn-modal-save">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const provider = "{{ provider_name }}";
+
+        // Load complaints on mount
+        loadComplaints();
+
+        async function loadComplaints() {
+            try {
+                const response = await fetch(`/api/provider/${provider}/complaints`);
+                if (!response.ok) throw new Error("Failed to load complaints.");
+                const data = await response.json();
+                
+                renderKPIs(data);
+                renderTable(data);
+
+            } catch (error) {
+                alert("Error loading compliance data: " + error.message);
+            }
+        }
+
+        function renderKPIs(complaints) {
+            const now = new Date();
+            let total = complaints.length;
+            let pending = 0;
+            let resolved = 0;
+            let breached = 0;
+
+            complaints.forEach(c => {
+                if (c.status === 'RESOLVED') {
+                    resolved++;
+                } else {
+                    pending++;
+                    const deadline = new Date(c.sla_deadline);
+                    if (now > deadline) {
+                        breached++;
+                    }
+                }
+            });
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-pending').textContent = pending;
+            document.getElementById('kpi-resolved').textContent = resolved;
+            document.getElementById('kpi-breached').textContent = breached;
+        }
+
+        function renderTable(complaints) {
+            const tbody = document.getElementById('complaints-list');
+            tbody.innerHTML = '';
+
+            if (complaints.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-table">
+                            <i data-lucide="inbox" style="width: 2rem; height: 2rem; margin-bottom: 0.5rem; display: inline-block;"></i>
+                            <br>No fraud complaints registered under ${provider} desk.
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const now = new Date();
+
+            complaints.forEach(c => {
+                const tr = document.createElement('tr');
+                
+                // Format dates
+                const createdDate = new Date(c.created_at).toLocaleDateString();
+                const deadline = new Date(c.sla_deadline);
+                
+                // SLA Remaining Logic
+                let slaHtml = '';
+                if (c.status === 'RESOLVED') {
+                    slaHtml = '<span class="sla-remaining">Completed</span>';
+                } else if (now > deadline) {
+                    slaHtml = '<span class="sla-breached">SLA BREACHED</span>';
+                } else {
+                    const diffMs = deadline - now;
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    slaHtml = `<span class="sla-remaining">${diffHours}h remaining</span>`;
+                }
+
+                // Escalation indicator
+                const escalatedHtml = c.escalated === 1 
+                    ? '<span class="escalated-badge"><i data-lucide="shield-alert" style="width: 10px; height: 10px;"></i> Flagged</span>' 
+                    : '<span style="color: var(--text-muted); font-size: 0.8rem;">Standard</span>';
+
+                tr.innerHTML = `
+                    <td class="ticket-id">${c.id}</td>
+                    <td>${c.phone_number}</td>
+                    <td>${c.fraud_type}</td>
+                    <td>${Number(c.amount).toLocaleString()} UGX</td>
+                    <td>${createdDate}</td>
+                    <td>${slaHtml}</td>
+                    <td><span class="status-pill pill-${c.status}">${c.status.replace(/_/g, ' ')}</span></td>
+                    <td>${escalatedHtml}</td>
+                    <td>
+                        <button class="btn-action" onclick="openUpdateModal('${c.id}', '${encodeURIComponent(c.notes || '')}', '${c.status}')">
+                            <i data-lucide="edit-2" style="width: 12px; height: 12px;"></i> Update
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        function openUpdateModal(id, notesEncoded, status) {
+            const notes = decodeURIComponent(notesEncoded);
+            document.getElementById('modal-case-id').textContent = id;
+            document.getElementById('modal-case-desc').textContent = notes;
+            document.getElementById('modal-hidden-id').value = id;
+            document.getElementById('modal-status').value = status;
+            document.getElementById('modal-notes').value = notes;
+            
+            document.getElementById('status-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('status-modal').style.display = 'none';
+        }
+
+        async function submitStatusUpdate(e) {
+            e.preventDefault();
+
+            const ticketId = document.getElementById('modal-hidden-id').value;
+            const status = document.getElementById('modal-status').value;
+            const notes = document.getElementById('modal-notes').value.trim();
+
+            const formData = new URLSearchParams();
+            formData.append('status', status);
+            formData.append('notes', notes);
+
+            try {
+                const response = await fetch(`/api/complaints/${ticketId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Failed to update status.");
+                
+                closeModal();
+                loadComplaints();
+
+            } catch (error) {
+                alert("Error updating ticket: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
