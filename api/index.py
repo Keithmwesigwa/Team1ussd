@@ -1,6 +1,6 @@
 import os
 import random
-from flask import Flask, request, render_template, make_response, jsonify
+from flask import Flask, request, render_template, make_response, jsonify, session, redirect
 
 # Fallback import logic for local running and Vercel serverless execution
 try:
@@ -18,10 +18,13 @@ except ImportError:
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
 app = Flask(__name__, template_folder=template_dir)
 
+# Set app secret key for Flask signed session cookies
+app.secret_key = 'bou_consumer_protection_ledger_secure_secret_key_2026'
+
 # Initialize database on application startup
 init_db()
 
-# --- WEB PORTALS ---
+# --- WEB PORTALS & AUTHENTICATION ---
 
 @app.route('/')
 def home():
@@ -31,16 +34,59 @@ def home():
 def user_portal():
     return render_template('user.html')
 
+@app.route('/login/<role>', methods=['GET', 'POST'])
+def login(role):
+    role_clean = role.lower()
+    if role_clean not in ['mtn', 'airtel', 'bou']:
+        return "Invalid Role Portal", 404
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        authorized = False
+        if role_clean == 'mtn' and username == 'mtn_compliance' and password == 'mtn123':
+            session['role'] = 'MTN'
+            authorized = True
+        elif role_clean == 'airtel' and username == 'airtel_compliance' and password == 'airtel123':
+            session['role'] = 'AIRTEL'
+            authorized = True
+        elif role_clean == 'bou' and username == 'bou_supervisor' and password == 'bou123':
+            session['role'] = 'BOU'
+            authorized = True
+            
+        if authorized:
+            if role_clean == 'bou':
+                return redirect('/bou')
+            return redirect(f'/provider/{role_clean.upper()}')
+        else:
+            return render_template('login.html', role=role_clean, error=True)
+            
+    return render_template('login.html', role=role_clean, error=False)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
 @app.route('/provider/<provider_name>')
 def provider_portal(provider_name):
-    # Ensure provider is uppercase
     p_name = provider_name.upper()
     if p_name not in ['MTN', 'AIRTEL']:
         return "Invalid Provider Desk", 404
+        
+    # Enforce role access control: must match MTN or AIRTEL
+    if session.get('role') != p_name:
+        return redirect(f'/login/{p_name.lower()}')
+        
     return render_template('provider.html', provider_name=p_name)
 
 @app.route('/bou')
 def bou_portal():
+    # Enforce role access control: must match BOU
+    if session.get('role') != 'BOU':
+        return redirect('/login/bou')
+        
     return render_template('bou.html')
 
 # --- API ENDPOINTS ---
