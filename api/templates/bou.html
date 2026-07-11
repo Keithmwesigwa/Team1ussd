@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank of Uganda Oversight Portal - FraudGuard</title>
+    <meta name="description" content="Bank of Uganda supervisory dashboard for auditing mobile money fraud disputes and enforcing SLA compliance.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-page:  #f1f5f9;
+            --bg-card:  #ffffff;
+            --bg-muted: #f8fafc;
+            --border:   #e2e8f0;
+            --gold:     #b45309;
+            --gold-bg:  #fef3c7;
+            --gold-b:   #fde68a;
+            --navy:     #1e3a8a;
+            --navy-lt:  #eff6ff;
+            --success:  #059669;
+            --warning:  #d97706;
+            --danger:   #dc2626;
+            --text-h:   #0f172a;
+            --text-b:   #334155;
+            --text-m:   #64748b;
+            --font:     'Plus Jakarta Sans', sans-serif;
+            --mono:     'JetBrains Mono', monospace;
+            --radius:   16px;
+            --shadow:   0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg-page); color:var(--text-b); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; }
+
+        /* ─── HEADER ─── */
+        header {
+            background:var(--navy); padding:1rem 2rem;
+            display:flex; justify-content:space-between; align-items:center;
+            position:sticky; top:0; z-index:20;
+            box-shadow:0 2px 12px rgba(0,0,0,.25);
+        }
+        .logo-row { display:flex; align-items:center; gap:.75rem; text-decoration:none; }
+        .logo-sq {
+            width:2.25rem; height:2.25rem; border-radius:9px;
+            background:rgba(252,211,77,.15); border:1.5px solid rgba(252,211,77,.3);
+            display:flex; align-items:center; justify-content:center;
+            font-weight:900; font-size:1rem; color:#fcd34d;
+        }
+        .logo-name { font-size:1.05rem; font-weight:800; color:#fff; }
+        .logo-sub  { font-size:.62rem; color:rgba(255,255,255,.5); font-weight:500; }
+        .header-right { display:flex; align-items:center; gap:.75rem; }
+        .role-chip { background:rgba(252,211,77,.15); border:1px solid rgba(252,211,77,.3); color:#fcd34d; padding:.3rem .9rem; border-radius:99px; font-size:.75rem; font-weight:700; }
+        .logout-btn { display:flex; align-items:center; gap:.4rem; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.8); padding:.4rem .9rem; border-radius:8px; font-size:.8rem; font-weight:700; cursor:pointer; text-decoration:none; transition:all .18s; }
+        .logout-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+        /* ─── STATS BAR ─── */
+        .stats-bar { background:var(--bg-card); border-bottom:1px solid var(--border); padding:1.25rem 2rem; display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center; }
+        .stat-item { display:flex; flex-direction:column; gap:.15rem; }
+        .stat-val  { font-size:1.5rem; font-weight:800; color:var(--text-h); line-height:1; }
+        .stat-lbl  { font-size:.7rem; font-weight:600; color:var(--text-m); text-transform:uppercase; letter-spacing:.4px; }
+        .stat-divider { width:1px; background:var(--border); align-self:stretch; margin:0 .5rem; }
+
+        /* Provider comparison */
+        .provider-compare { display:flex; gap:1.25rem; margin-left:auto; flex-wrap:wrap; }
+        .prov-block { display:flex; flex-direction:column; gap:.35rem; min-width:140px; }
+        .prov-label { font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--text-m); letter-spacing:.4px; }
+        .prov-bar-bg { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+        .prov-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
+        .prov-bar-fill.mtn    { background:#ca8a04; }
+        .prov-bar-fill.airtel { background:#dc2626; }
+        .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }
+
+        /* ─── CONTENT ─── */
+        .content { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:1.75rem 2rem; display:flex; flex-direction:column; gap:1.5rem; }
+        .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; box-shadow:var(--shadow); }
+        .card-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; }
+        .card-title { font-size:1rem; font-weight:800; color:var(--text-h); display:flex; align-items:center; gap:.5rem; }
+        .ct-icon { width:1.85rem; height:1.85rem; border-radius:8px; background:var(--gold-bg); color:var(--gold); display:flex; align-items:center; justify-content:center; }
+        .refresh-btn { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:.4rem; }
+        .refresh-btn:hover { background:var(--gold-bg); color:var(--gold); border-color:var(--gold-b); }
+
+        /* SLA ALERT BANNER */
+        .breach-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:.9rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+        .breach-txt { display:flex; align-items:center; gap:.6rem; color:var(--danger); font-weight:700; font-size:.85rem; }
+        .breach-count { background:var(--danger); color:#fff; width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:800; }
+
+        /* TABLE */
+        .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+        table { width:100%; border-collapse:collapse; font-size:.83rem; }
+        thead tr { background:var(--bg-muted); }
+        th { padding:.8rem 1rem; text-align:left; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--text-m); border-bottom:1px solid var(--border); white-space:nowrap; }
+        td { padding:.9rem 1rem; border-bottom:1px solid var(--border); color:var(--text-b); vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#fafafa; }
+        tr.row-breached td { background:#fff5f5; }
+
+        /* BADGES */
+        .badge { display:inline-flex; align-items:center; gap:.3rem; padding:.25rem .7rem; border-radius:99px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+        .badge-pending  { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
+        .badge-invest   { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
+        .badge-resolved { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+        .badge-escalated{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .badge-mtn      { background:#fef9c3; color:#92400e; }
+        .badge-airtel   { background:#fee2e2; color:#991b1b; }
+
+        .sla-ok  { color:var(--success); font-weight:700; font-size:.82rem; }
+        .sla-warn{ color:var(--warning); font-weight:700; font-size:.82rem; }
+        .sla-over{ color:var(--danger);  font-weight:700; font-size:.82rem; }
+
+        /* ESCALATE BTN */
+        .esc-btn { background:#fee2e2; border:1px solid #fecaca; color:var(--danger); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .18s; white-space:nowrap; }
+        .esc-btn:hover { background:var(--danger); color:#fff; }
+        .esc-done { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:700; cursor:default; }
+
+        .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem; color:var(--text-m); gap:.75rem; text-align:center; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-row">
+            <div class="logo-sq">B</div>
+            <div>
+                <div class="logo-name">Bank of Uganda</div>
+                <div class="logo-sub">Consumer Protection Supervisory Board</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="role-chip">BoU Supervisor</div>
+            <a href="/logout" class="logout-btn">
+                <i data-lucide="log-out" style="width:14px;height:14px;"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-lbl">Total Cases</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-active" style="color:#4338ca;">—</div>
+            <div class="stat-lbl">Active</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-resolved" style="color:var(--success);">—</div>
+            <div class="stat-lbl">Resolved</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-breached" style="color:var(--danger);">—</div>
+            <div class="stat-lbl">SLA Breached</div>
+        </div>
+
+        <!-- Provider comparison bars -->
+        <div class="provider-compare">
+            <div class="prov-block">
+                <div class="prov-label">MTN Resolution Rate</div>
+                <div class="prov-bar-bg"><div class="prov-bar-fill mtn" id="mtn-bar" style="width:0%;"></div></div>
+                <div class="prov-stats"><span id="mtn-stats">0 / 0</span><span id="mtn-pct" style="color:var(--gold);">0%</span></div>
+            </div>
+            <div class="prov-block">
+                <div class="prov-label">Airtel Resolution Rate</div>
+                <div class="prov-bar-bg"><div class="prov-bar-fill airtel" id="airtel-bar" style="width:0%;"></div></div>
+                <div class="prov-stats"><span id="airtel-stats">0 / 0</span><span id="airtel-pct" style="color:var(--danger);">0%</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <!-- SLA Breach banner -->
+        <div class="breach-banner" id="breach-banner" style="display:none;">
+            <div class="breach-txt">
+                <i data-lucide="alert-octagon" style="width:18px;height:18px;"></i>
+                <div>
+                    <div style="margin-bottom:.1rem;">SLA Compliance Alert</div>
+                    <div style="font-size:.78rem;font-weight:500;color:#991b1b;" id="breach-detail">Cases have exceeded the 48-hour resolution SLA.</div>
+                </div>
+            </div>
+            <div class="breach-count" id="breach-count">0</div>
+        </div>
+
+        <!-- All cases table -->
+        <div class="card">
+            <div class="card-hd">
+                <div class="card-title">
+                    <div class="ct-icon"><i data-lucide="database" style="width:14px;height:14px;"></i></div>
+                    Complete Audit Register
+                </div>
+                <button class="refresh-btn" onclick="loadData()">
+                    <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Refresh
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Provider</th>
+                            <th>Phone</th>
+                            <th>Category</th>
+                            <th>Amount (UGX)</th>
+                            <th>Status</th>
+                            <th>SLA Remaining</th>
+                            <th>Escalated</th>
+                            <th>BoU Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cases-tbody">
+                        <tr><td colspan="9"><div class="empty-state"><i data-lucide="loader" style="width:2rem;height:2rem;"></i><span>Loading…</span></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        async function loadData() {
+            try {
+                const [statsR, casesR] = await Promise.all([
+                    fetch('/api/stats'),
+                    fetch('/api/complaints')
+                ]);
+                const stats = await statsR.json();
+                const cases = await casesR.json();
+                renderStats(stats, cases);
+                renderTable(cases);
+            } catch(e) { console.error(e); }
+        }
+
+        function renderStats(s, cases) {
+            document.getElementById('stat-total').textContent    = s.total ?? 0;
+            document.getElementById('stat-active').textContent   = s.active ?? 0;
+            document.getElementById('stat-resolved').textContent = s.resolved ?? 0;
+
+            const breached = cases.filter(c => new Date() > new Date(c.sla_deadline) && c.status !== 'RESOLVED').length;
+            document.getElementById('stat-breached').textContent = breached;
+
+            // MTN bar
+            const mtnTotal = s.mtn_total || 0;
+            const mtnRes   = s.mtn_resolved || 0;
+            const mtnPct   = mtnTotal ? Math.round((mtnRes / mtnTotal) * 100) : 0;
+            document.getElementById('mtn-bar').style.width   = mtnPct + '%';
+            document.getElementById('mtn-stats').textContent = `${mtnRes} / ${mtnTotal}`;
+            document.getElementById('mtn-pct').textContent   = mtnPct + '%';
+
+            // Airtel bar
+            const airTotal = s.airtel_total || 0;
+            const airRes   = s.airtel_resolved || 0;
+            const airPct   = airTotal ? Math.round((airRes / airTotal) * 100) : 0;
+            document.getElementById('airtel-bar').style.width   = airPct + '%';
+            document.getElementById('airtel-stats').textContent = `${airRes} / ${airTotal}`;
+            document.getElementById('airtel-pct').textContent   = airPct + '%';
+
+            // Breach banner
+            if (breached > 0) {
+                document.getElementById('breach-banner').style.display = 'flex';
+                document.getElementById('breach-count').textContent     = breached;
+                document.getElementById('breach-detail').textContent    =
+                    `${breached} case${breached > 1 ? 's have' : ' has'} exceeded the 48-hour resolution SLA.`;
+            }
+        }
+
+        function slaLabel(deadline, status) {
+            if (status === 'RESOLVED') return `<span class="sla-ok">Resolved</span>`;
+            const diff = new Date(deadline) - new Date();
+            if (diff < 0) return `<span class="sla-over">Overdue by ${Math.abs(Math.floor(diff/3600000))}h</span>`;
+            const h = Math.floor(diff/3600000);
+            const m = Math.floor((diff%3600000)/60000);
+            return `<span class="${h<6?'sla-warn':'sla-ok'}">${h}h ${m}m</span>`;
+        }
+
+        function statusBadge(s) {
+            const map = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved' };
+            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved' };
+            return `<span class="badge ${map[s]||''}">${labels[s]||s}</span>`;
+        }
+
+        function renderTable(cases) {
+            const tbody = document.getElementById('cases-tbody');
+            if (!cases.length) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i data-lucide="inbox" style="width:2.5rem;height:2.5rem;color:var(--border);"></i><div>No cases yet</div></div></td></tr>`;
+                lucide.createIcons(); return;
+            }
+            tbody.innerHTML = cases.map(c => {
+                const breached = new Date() > new Date(c.sla_deadline) && c.status !== 'RESOLVED';
+                return `<tr class="${breached?'row-breached':''}">
+                    <td><strong style="font-family:var(--mono);color:var(--text-h);">${c.id}</strong></td>
+                    <td><span class="badge ${c.provider === 'MTN' ? 'badge-mtn' : 'badge-airtel'}">${c.provider}</span></td>
+                    <td style="font-size:.8rem;">${c.phone_number}</td>
+                    <td style="font-size:.8rem;">${c.fraud_type}</td>
+                    <td>${Number(c.amount).toLocaleString()}</td>
+                    <td>${statusBadge(c.status)}</td>
+                    <td>${slaLabel(c.sla_deadline, c.status)}</td>
+                    <td>${c.escalated ? '<span class="badge badge-escalated">Yes</span>' : '<span style="font-size:.78rem;color:var(--text-m);">No</span>'}</td>
+                    <td>${c.escalated
+                        ? `<span class="esc-done">Flagged</span>`
+                        : `<button class="esc-btn" onclick="escalateCase('${c.id}')"><i data-lucide="alert-triangle" style="width:12px;height:12px;display:inline;"></i> Escalate</button>`}
+                    </td>
+                </tr>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        async function escalateCase(id) {
+            if (!confirm(`Escalate case ${id} to BoU enforcement?\n\nThis will notify the service provider of mandatory compliance action.`)) return;
+            try {
+                await fetch(`/api/complaints/${id}/escalate`, { method:'POST' });
+                loadData();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        loadData();
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>

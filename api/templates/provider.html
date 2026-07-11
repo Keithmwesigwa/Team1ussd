@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ provider_name }} Compliance Desk - FraudGuard</title>
+    <meta name="description" content="{{ provider_name }} Uganda compliance officer portal for managing and resolving mobile money fraud disputes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-page:  #f1f5f9;
+            --bg-card:  #ffffff;
+            --bg-muted: #f8fafc;
+            --border:   #e2e8f0;
+
+            {% if provider_name == 'MTN' %}
+            --accent:    #ca8a04;
+            --accent-h:  #a16207;
+            --accent-bg: #fef9c3;
+            --accent-b:  #fde68a;
+            --brand-bar: #1e1b4b;
+            --brand-txt: #facc15;
+            {% else %}
+            --accent:    #dc2626;
+            --accent-h:  #b91c1c;
+            --accent-bg: #fee2e2;
+            --accent-b:  #fecaca;
+            --brand-bar: #dc2626;
+            --brand-txt: #ffffff;
+            {% endif %}
+
+            --success:  #059669;
+            --warning:  #d97706;
+            --danger:   #dc2626;
+            --text-h:   #0f172a;
+            --text-b:   #334155;
+            --text-m:   #64748b;
+            --font:     'Plus Jakarta Sans', sans-serif;
+            --mono:     'JetBrains Mono', monospace;
+            --radius:   16px;
+            --shadow:   0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg-page); color:var(--text-b); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; }
+
+        /* ─── HEADER ─── */
+        header {
+            background:var(--brand-bar); padding:1rem 2rem;
+            display:flex; justify-content:space-between; align-items:center;
+            position:sticky; top:0; z-index:20;
+            box-shadow:0 2px 8px rgba(0,0,0,.15);
+        }
+        .logo-row { display:flex; align-items:center; gap:.75rem; text-decoration:none; }
+        .logo-sq {
+            width:2.25rem; height:2.25rem; border-radius:9px;
+            background:var(--brand-txt); opacity:.15;
+            position:absolute;
+        }
+        .logo-sq-text {
+            width:2.25rem; height:2.25rem; border-radius:9px;
+            background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.2);
+            display:flex; align-items:center; justify-content:center;
+            font-weight:900; font-size:1rem; color:var(--brand-txt);
+        }
+        .logo-name { font-size:1.05rem; font-weight:800; color:var(--brand-txt); }
+        .logo-sub  { font-size:.62rem; color:rgba(255,255,255,.55); font-weight:500; }
+        .header-right { display:flex; align-items:center; gap:.75rem; }
+        .role-chip {
+            background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+            color:var(--brand-txt); padding:.3rem .9rem; border-radius:99px;
+            font-size:.75rem; font-weight:700;
+        }
+        .logout-btn {
+            display:flex; align-items:center; gap:.4rem;
+            background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+            color:var(--brand-txt); padding:.4rem .9rem; border-radius:8px;
+            font-size:.8rem; font-weight:700; cursor:pointer; text-decoration:none;
+            transition:all .18s;
+        }
+        .logout-btn:hover { background:rgba(255,255,255,.2); }
+
+        /* ─── STATS BAR ─── */
+        .stats-bar {
+            background:var(--bg-card); border-bottom:1px solid var(--border);
+            padding:1.25rem 2rem; display:flex; gap:1.5rem; flex-wrap:wrap;
+        }
+        .stat-item { display:flex; flex-direction:column; gap:.15rem; }
+        .stat-val  { font-size:1.5rem; font-weight:800; color:var(--text-h); line-height:1; }
+        .stat-lbl  { font-size:.7rem; font-weight:600; color:var(--text-m); text-transform:uppercase; letter-spacing:.4px; }
+        .stat-divider { width:1px; background:var(--border); align-self:stretch; margin:0 .5rem; }
+
+        /* ─── CONTENT ─── */
+        .content { flex:1; max-width:1200px; width:100%; margin:0 auto; padding:1.75rem 2rem; display:flex; flex-direction:column; gap:1.5rem; }
+
+        .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; box-shadow:var(--shadow); }
+        .card-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; }
+        .card-title { font-size:1rem; font-weight:800; color:var(--text-h); display:flex; align-items:center; gap:.5rem; }
+        .card-title .icon { width:1.85rem; height:1.85rem; border-radius:8px; background:var(--accent-bg); color:var(--accent); display:flex; align-items:center; justify-content:center; }
+        .refresh-btn { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:.4rem; }
+        .refresh-btn:hover { background:var(--accent-bg); color:var(--accent); border-color:var(--accent-b); }
+
+        /* FILTERS */
+        .filter-row { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+        .filter-chip { background:var(--bg-muted); border:1.5px solid var(--border); color:var(--text-m); padding:.35rem .85rem; border-radius:99px; font-size:.75rem; font-weight:700; cursor:pointer; transition:all .18s; }
+        .filter-chip:hover, .filter-chip.active { background:var(--accent-bg); border-color:var(--accent-b); color:var(--accent); }
+
+        /* TABLE */
+        .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+        table { width:100%; border-collapse:collapse; font-size:.83rem; }
+        thead tr { background:var(--bg-muted); }
+        th { padding:.8rem 1rem; text-align:left; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--text-m); border-bottom:1px solid var(--border); white-space:nowrap; }
+        td { padding:.9rem 1rem; border-bottom:1px solid var(--border); color:var(--text-b); vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#fafafa; }
+
+        /* BADGES */
+        .badge { display:inline-flex; align-items:center; gap:.3rem; padding:.25rem .7rem; border-radius:99px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+        .badge-pending  { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
+        .badge-invest   { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
+        .badge-resolved { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+        .badge-escalated{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+
+        /* SLA countdown */
+        .sla-ok  { color:var(--success); font-weight:700; }
+        .sla-warn{ color:var(--warning); font-weight:700; }
+        .sla-over{ color:var(--danger);  font-weight:700; }
+
+        /* ACTION BTN */
+        .action-btn { background:var(--accent-bg); border:1px solid var(--accent-b); color:var(--accent); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .18s; white-space:nowrap; }
+        .action-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+        /* MODAL */
+        .modal-mask { position:fixed; inset:0; background:rgba(15,23,42,.45); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:1.5rem; }
+        .modal-box { background:var(--bg-card); border-radius:18px; padding:2rem; max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.15); animation:pop .25s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes pop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-title { font-size:1.1rem; font-weight:800; color:var(--text-h); margin-bottom:1.25rem; display:flex; align-items:center; gap:.5rem; }
+        .fg { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1rem; }
+        .fl { font-size:.7rem; font-weight:700; text-transform:uppercase; color:var(--text-m); letter-spacing:.4px; }
+        .fs, .fta { background:var(--bg-muted); border:1.5px solid var(--border); border-radius:9px; padding:.7rem .85rem; color:var(--text-h); font-family:var(--font); font-size:.88rem; outline:none; width:100%; transition:border .18s; }
+        .fta { resize:none; height:80px; }
+        .fs:focus, .fta:focus { border-color:var(--accent); }
+        .modal-actions { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; }
+        .btn-cancel { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.65rem 1.25rem; border-radius:9px; font-weight:700; cursor:pointer; font-size:.85rem; }
+        .btn-save   { background:var(--accent); color:{% if provider_name == 'MTN' %}#000{% else %}#fff{% endif %}; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:800; cursor:pointer; font-size:.85rem; transition:all .18s; }
+        .btn-save:hover { background:var(--accent-h); }
+
+        /* EMPTY STATE */
+        .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem; color:var(--text-m); gap:.75rem; text-align:center; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-row">
+            <div class="logo-sq-text">{{ provider_name[0] }}</div>
+            <div>
+                <div class="logo-name">{{ provider_name }} Uganda</div>
+                <div class="logo-sub">Compliance & Dispute Resolution Desk</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="role-chip">{{ provider_name }} Officer</div>
+            <a href="/logout" class="logout-btn">
+                <i data-lucide="log-out" style="width:14px;height:14px;"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- STATS -->
+    <div class="stats-bar" id="stats-bar">
+        <div class="stat-item">
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-lbl">Total Cases</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-pending" style="color:var(--warning);">—</div>
+            <div class="stat-lbl">Pending</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-inv" style="color:#4338ca;">—</div>
+            <div class="stat-lbl">Investigating</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-resolved" style="color:var(--success);">—</div>
+            <div class="stat-lbl">Resolved</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-val" id="stat-breached" style="color:var(--danger);">—</div>
+            <div class="stat-lbl">SLA Breached</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <div class="card-hd">
+                <div class="card-title">
+                    <div class="icon"><i data-lucide="inbox" style="width:14px;height:14px;"></i></div>
+                    Assigned Disputes
+                </div>
+                <button class="refresh-btn" onclick="loadComplaints()">
+                    <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-row">
+                <div class="filter-chip active" id="f-all" onclick="applyFilter('ALL')">All</div>
+                <div class="filter-chip" id="f-PENDING" onclick="applyFilter('PENDING')">Pending</div>
+                <div class="filter-chip" id="f-UNDER_INVESTIGATION" onclick="applyFilter('UNDER_INVESTIGATION')">Investigating</div>
+                <div class="filter-chip" id="f-RESOLVED" onclick="applyFilter('RESOLVED')">Resolved</div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Phone</th>
+                            <th>Category</th>
+                            <th>Amount (UGX)</th>
+                            <th>Status</th>
+                            <th>SLA Remaining</th>
+                            <th>Channel</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cases-tbody">
+                        <tr><td colspan="8"><div class="empty-state"><i data-lucide="loader" style="width:2rem;height:2rem;"></i><span>Loading cases…</span></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPDATE MODAL -->
+    <div class="modal-mask" id="update-modal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <i data-lucide="edit" style="width:18px;height:18px;color:var(--accent);"></i>
+                Update Case: <span id="modal-case-id" style="color:var(--accent);">FG-XXXX</span>
+            </div>
+            <div class="fg">
+                <label class="fl">New Status</label>
+                <select class="fs" id="modal-status">
+                    <option value="PENDING">Pending</option>
+                    <option value="UNDER_INVESTIGATION">Under Investigation</option>
+                    <option value="RESOLVED">Resolved</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label class="fl">Progress Notes</label>
+                <textarea class="fta" id="modal-notes" placeholder="Describe actions taken, findings, or resolution details…"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveUpdate()">Save Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const PROVIDER = '{{ provider_name }}';
+        let allCases = [];
+        let activeFilter = 'ALL';
+        let activeCaseId = null;
+
+        async function loadComplaints() {
+            try {
+                const r = await fetch(`/api/provider/${PROVIDER}/complaints`);
+                allCases = await r.json();
+                loadStats();
+                renderTable(allCases);
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadStats() {
+            try {
+                const r = await fetch('/api/stats');
+                const s = await r.json();
+                const key = PROVIDER.toLowerCase();
+                document.getElementById('stat-total').textContent    = s[`${key}_total`] ?? 0;
+                document.getElementById('stat-pending').textContent  = allCases.filter(c => c.status === 'PENDING').length;
+                document.getElementById('stat-inv').textContent      = allCases.filter(c => c.status === 'UNDER_INVESTIGATION').length;
+                document.getElementById('stat-resolved').textContent = s[`${key}_resolved`] ?? 0;
+                document.getElementById('stat-breached').textContent = allCases.filter(c => {
+                    return new Date() > new Date(c.sla_deadline) && c.status !== 'RESOLVED';
+                }).length;
+            } catch(e) {}
+        }
+
+        function applyFilter(f) {
+            activeFilter = f;
+            document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+            document.getElementById(f === 'ALL' ? 'f-all' : `f-${f}`).classList.add('active');
+            const filtered = f === 'ALL' ? allCases : allCases.filter(c => c.status === f);
+            renderTable(filtered);
+        }
+
+        function slaLabel(deadline, status) {
+            if (status === 'RESOLVED') return `<span class="sla-ok">Resolved</span>`;
+            const diff = new Date(deadline) - new Date();
+            if (diff < 0) return `<span class="sla-over">Overdue</span>`;
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const cls = h < 6 ? 'sla-warn' : 'sla-ok';
+            return `<span class="${cls}">${h}h ${m}m</span>`;
+        }
+
+        function statusBadge(s, escalated) {
+            if (escalated === 1) return `<span class="badge badge-escalated"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> Escalated</span>`;
+            const map = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved' };
+            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved' };
+            return `<span class="badge ${map[s] || ''}">${labels[s] || s}</span>`;
+        }
+
+        function renderTable(cases) {
+            const tbody = document.getElementById('cases-tbody');
+            if (!cases.length) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i data-lucide="inbox" style="width:2.5rem;height:2.5rem;color:var(--border);"></i><div>No cases found</div></div></td></tr>`;
+                lucide.createIcons(); return;
+            }
+            tbody.innerHTML = cases.map(c => `
+                <tr>
+                    <td><strong style="font-family:var(--mono);color:var(--text-h);">${c.id}</strong></td>
+                    <td>${c.phone_number}</td>
+                    <td>${c.fraud_type}</td>
+                    <td>${Number(c.amount).toLocaleString()}</td>
+                    <td>${statusBadge(c.status, c.escalated)}</td>
+                    <td>${slaLabel(c.sla_deadline, c.status)}</td>
+                    <td><span style="font-size:.72rem;font-weight:700;color:var(--text-m);">${c.language || 'Web'}</span></td>
+                    <td><button class="action-btn" onclick="openModal('${c.id}','${c.status}')">Update</button></td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function openModal(id, status) {
+            activeCaseId = id;
+            document.getElementById('modal-case-id').textContent = id;
+            document.getElementById('modal-status').value = status;
+            document.getElementById('modal-notes').value = '';
+            document.getElementById('update-modal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('update-modal').style.display = 'none'; }
+
+        async function saveUpdate() {
+            const status = document.getElementById('modal-status').value;
+            const notes  = document.getElementById('modal-notes').value.trim();
+            if (!notes) { alert('Please enter progress notes.'); return; }
+            try {
+                await fetch(`/api/complaints/${activeCaseId}/status`, {
+                    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({ status, notes })
+                });
+                closeModal();
+                loadComplaints();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        loadComplaints();
+        setInterval(loadComplaints, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumer Portal - FraudGuard</title>
+    <meta name="description" content="File a mobile money fraud complaint or track your case status with the Bank of Uganda FraudGuard system.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-page:   #f1f5f9;
+            --bg-card:   #ffffff;
+            --bg-muted:  #f8fafc;
+            --border:    #e2e8f0;
+            --accent:    #0d9488;
+            --accent-h:  #0f766e;
+            --indigo:    #4f46e5;
+            --success:   #059669;
+            --warning:   #d97706;
+            --danger:    #dc2626;
+            --text-h:    #0f172a;
+            --text-b:    #334155;
+            --text-m:    #64748b;
+            --font:      'Plus Jakarta Sans', sans-serif;
+            --mono:      'JetBrains Mono', monospace;
+            --radius:    18px;
+            --shadow:    0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+
+        body {
+            background: var(--bg-page);
+            color: var(--text-b);
+            font-family: var(--font);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            background: var(--bg-card); border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 20;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        }
+        .logo-row { display:flex; align-items:center; gap:.65rem; text-decoration:none; }
+        .logo-sq {
+            width:2.1rem; height:2.1rem; border-radius:9px;
+            background: linear-gradient(135deg, var(--accent), var(--indigo));
+            display:flex; align-items:center; justify-content:center;
+            color:#fff; box-shadow:0 2px 8px rgba(13,148,136,.3);
+        }
+        .logo-name { font-size:1.05rem; font-weight:800; color:var(--text-h); }
+        .logo-sub  { font-size:.6rem; color:var(--text-m); font-weight:500; }
+        .back-btn {
+            display:flex; align-items:center; gap:.4rem;
+            color:var(--text-m); text-decoration:none;
+            font-size:.85rem; font-weight:600;
+            border:1px solid var(--border); padding:.45rem 1rem;
+            border-radius:8px; transition:all .18s;
+        }
+        .back-btn:hover { color:var(--text-h); background:var(--bg-muted); }
+
+        /* PAGE HERO */
+        .page-hero {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ede9fe 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 2rem 1.5rem;
+        }
+        .page-hero h2 { font-size:1.5rem; font-weight:800; color:var(--text-h); }
+        .page-hero p  { font-size:.9rem; color:var(--text-m); margin-top:.35rem; }
+
+        /* CONTENT GRID */
+        .content {
+            flex:1; max-width:1150px; width:100%; margin:0 auto;
+            padding:2rem; display:grid;
+            grid-template-columns:1fr 1fr; gap:2rem;
+        }
+        @media(max-width:860px){ .content{ grid-template-columns:1fr; } }
+
+        .card {
+            background:var(--bg-card); border:1px solid var(--border);
+            border-radius:var(--radius); padding:2rem; box-shadow:var(--shadow);
+            display:flex; flex-direction:column;
+        }
+        .card-title {
+            font-size:1.05rem; font-weight:800; color:var(--text-h);
+            display:flex; align-items:center; gap:.6rem;
+            padding-bottom:.85rem; border-bottom:1px solid var(--border); margin-bottom:1.5rem;
+        }
+        .card-title .ct-icon {
+            width:2rem; height:2rem; border-radius:8px;
+            background:#ccfbf1; color:var(--accent);
+            display:flex; align-items:center; justify-content:center;
+        }
+        .card-title .ct-icon.track { background:#ede9fe; color:var(--indigo); }
+
+        /* FORM */
+        .fg { display:flex; flex-direction:column; gap:.45rem; margin-bottom:1.1rem; }
+        .fl { font-size:.73rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-m); }
+        .fi, .fs, .fta {
+            background:var(--bg-muted); border:1.5px solid var(--border);
+            border-radius:9px; padding:.75rem .9rem;
+            color:var(--text-h); font-family:var(--font); font-size:.9rem;
+            outline:none; transition:all .2s; width:100%;
+        }
+        .fta { resize:none; height:90px; }
+        .fi:focus, .fs:focus, .fta:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(13,148,136,.1); }
+
+        .btn-submit {
+            background:linear-gradient(135deg, var(--accent), var(--indigo));
+            color:#fff; border:none; padding:.9rem;
+            border-radius:10px; font-size:.95rem; font-weight:700;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            gap:.5rem; transition:all .2s; margin-top:auto;
+            box-shadow:0 4px 14px rgba(13,148,136,.25);
+        }
+        .btn-submit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(13,148,136,.35); }
+
+        /* TRACKING */
+        .search-row { display:flex; gap:.6rem; margin-bottom:1.75rem; }
+        .btn-track {
+            background:var(--accent); color:#fff; border:none;
+            padding:0 1.2rem; border-radius:9px; font-weight:700; font-size:.85rem;
+            cursor:pointer; display:flex; align-items:center; gap:.4rem; white-space:nowrap;
+            transition:all .2s; flex-shrink:0;
+        }
+        .btn-track:hover { background:var(--accent-h); }
+        .empty-state {
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; flex:1; color:var(--text-m);
+            gap:.75rem; text-align:center; padding:3rem 0;
+        }
+        .empty-state svg { color:var(--border); }
+
+        /* STATUS BADGE */
+        .s-badge {
+            display:inline-flex; align-items:center; gap:.4rem;
+            padding:.35rem .9rem; border-radius:99px; font-size:.75rem; font-weight:700;
+            text-transform:uppercase;
+        }
+        .s-PENDING          { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
+        .s-UNDER_INVESTIGATION { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
+        .s-RESOLVED         { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+
+        /* TRACKING PANEL */
+        .track-panel { display:none; flex-direction:column; animation:fadeUp .3s ease; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem .5rem; margin:1rem 0; }
+        .detail-block { background:var(--bg-muted); border:1px solid var(--border); border-radius:9px; padding:.7rem .9rem; }
+        .detail-lbl { font-size:.68rem; text-transform:uppercase; color:var(--text-m); font-weight:700; letter-spacing:.4px; margin-bottom:.2rem; }
+        .detail-val { font-size:.88rem; font-weight:700; color:var(--text-h); }
+
+        /* SLA WARNING */
+        .sla-warning {
+            background:#fef2f2; border:1px solid #fecaca; color:var(--danger);
+            padding:.7rem .9rem; border-radius:9px; font-size:.78rem; font-weight:600;
+            display:none; align-items:center; gap:.5rem; margin-top:.75rem;
+        }
+
+        /* TIMELINE */
+        .timeline { display:flex; flex-direction:column; gap:.85rem; margin-top:1.25rem; }
+        .tl-label { font-size:.82rem; font-weight:800; color:var(--text-h); margin-bottom:.1rem; }
+        .tl-item { display:flex; gap:.75rem; }
+        .tl-line { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+        .tl-dot  { width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; margin-top:4px; box-shadow:0 0 0 3px rgba(13,148,136,.2); }
+        .tl-dot.escalated { background:var(--danger); box-shadow:0 0 0 3px rgba(220,38,38,.2); }
+        .tl-connector { flex:1; width:2px; background:var(--border); margin-top:4px; }
+        .tl-body { flex:1; padding-bottom:.85rem; }
+        .tl-time  { font-size:.68rem; color:var(--text-m); margin-bottom:.2rem; }
+        .tl-title { font-size:.82rem; font-weight:700; color:var(--text-h); }
+        .tl-desc  { font-size:.8rem; color:var(--text-m); line-height:1.45; margin-top:.15rem; }
+
+        /* SUCCESS MODAL */
+        .modal-mask {
+            position:fixed; inset:0; background:rgba(15,23,42,.45);
+            backdrop-filter:blur(6px); display:none;
+            align-items:center; justify-content:center; z-index:100; padding:1.5rem;
+        }
+        .modal-box {
+            background:var(--bg-card); border-radius:20px; padding:2.25rem;
+            max-width:420px; width:100%; text-align:center;
+            box-shadow:0 20px 60px rgba(0,0,0,.15);
+            animation:pop .3s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes pop { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-icon-wrap {
+            width:3.5rem; height:3.5rem; border-radius:50%;
+            background:#d1fae5; border:1px solid #6ee7b7;
+            color:var(--success); display:flex; align-items:center;
+            justify-content:center; margin:0 auto 1.25rem;
+        }
+        .modal-title { font-size:1.35rem; font-weight:800; color:var(--text-h); margin-bottom:.4rem; }
+        .modal-sub   { font-size:.88rem; color:var(--text-m); line-height:1.5; margin-bottom:1.25rem; }
+        .ticket-chip {
+            background:var(--bg-muted); border:1.5px dashed var(--border);
+            border-radius:10px; padding:.85rem; font-family:var(--mono);
+            font-size:1.35rem; font-weight:700; color:var(--accent);
+            display:flex; align-items:center; justify-content:center;
+            gap:.6rem; margin-bottom:1.5rem; letter-spacing:1px;
+        }
+        .btn-close {
+            background:var(--bg-muted); border:1px solid var(--border);
+            color:var(--text-h); padding:.75rem 2rem; border-radius:9px;
+            font-weight:700; cursor:pointer; transition:all .18s;
+        }
+        .btn-close:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo-row">
+            <div class="logo-sq"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i></div>
+            <div>
+                <div class="logo-name">FraudGuard</div>
+                <div class="logo-sub">Consumer Protection System</div>
+            </div>
+        </a>
+        <a href="/" class="back-btn">
+            <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Hub
+        </a>
+    </header>
+
+    <div class="page-hero">
+        <h2>Consumer Self-Service Portal</h2>
+        <p>File an official fraud complaint or track an existing case using your ticket ID.</p>
+    </div>
+
+    <div class="content">
+        <!-- FILE COMPLAINT -->
+        <div class="card">
+            <div class="card-title">
+                <div class="ct-icon"><i data-lucide="edit-3" style="width:14px;height:14px;"></i></div>
+                Report a Fraudulent Incident
+            </div>
+            <form id="report-form" onsubmit="submitReport(event)">
+                <div class="fg">
+                    <label class="fl">Your Phone Number</label>
+                    <input type="text" class="fi" id="phone" placeholder="+256770123456" required>
+                </div>
+                <div class="fg">
+                    <label class="fl">Affected Provider</label>
+                    <select class="fs" id="provider" required>
+                        <option value="" disabled selected>Select provider…</option>
+                        <option value="MTN">MTN Uganda</option>
+                        <option value="Airtel">Airtel Uganda</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label class="fl">Fraud Category</label>
+                    <select class="fs" id="fraud-type" required>
+                        <option value="" disabled selected>Select category…</option>
+                        <option>Mobile Money Fraud</option>
+                        <option>Card / Bank Fraud</option>
+                        <option>Identity Theft</option>
+                        <option>Phishing / Online Scam</option>
+                        <option>SIM Swap Fraud</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label class="fl">Estimated Amount Lost (UGX)</label>
+                    <input type="number" class="fi" id="amount" placeholder="0" required>
+                </div>
+                <div class="fg">
+                    <label class="fl">Description / Suspect Details</label>
+                    <textarea class="fta" id="notes" placeholder="Describe the incident: suspect number, time, transaction ID…" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i data-lucide="send" style="width:16px;height:16px;"></i> File Official Complaint
+                </button>
+            </form>
+        </div>
+
+        <!-- TRACK CASE -->
+        <div class="card">
+            <div class="card-title">
+                <div class="ct-icon track"><i data-lucide="search" style="width:14px;height:14px;"></i></div>
+                Track Incident Progress
+            </div>
+            <div class="search-row">
+                <input type="text" class="fi" id="search-id" placeholder="Case ID (e.g. FG-8241)" autocomplete="off">
+                <button class="btn-track" onclick="trackComplaint()">
+                    <i data-lucide="search" style="width:14px;height:14px;"></i> Track
+                </button>
+            </div>
+
+            <!-- Empty state -->
+            <div class="empty-state" id="track-empty">
+                <i data-lucide="folder-search" style="width:3.5rem;height:3.5rem;"></i>
+                <div style="font-weight:600;">Enter a Case ID to view resolution logs</div>
+                <div style="font-size:.8rem;">Your ID was shown when you filed your complaint</div>
+            </div>
+
+            <!-- Results -->
+            <div class="track-panel" id="track-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="res-id" style="font-size:1.05rem; color:var(--text-h);">FG-XXXX</h3>
+                    <div class="s-badge" id="res-badge">PENDING</div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-block">
+                        <div class="detail-lbl">Phone Number</div>
+                        <div class="detail-val" id="res-phone">—</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-lbl">Provider</div>
+                        <div class="detail-val" id="res-provider">—</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-lbl">Category</div>
+                        <div class="detail-val" id="res-type">—</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-lbl">Amount (UGX)</div>
+                        <div class="detail-val" id="res-amount">—</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-lbl">Reported On</div>
+                        <div class="detail-val" id="res-date">—</div>
+                    </div>
+                    <div class="detail-block">
+                        <div class="detail-lbl">SLA Deadline (48h)</div>
+                        <div class="detail-val" id="res-deadline">—</div>
+                    </div>
+                </div>
+
+                <div class="sla-warning" id="sla-warn">
+                    <i data-lucide="alert-triangle" style="width:15px;height:15px;flex-shrink:0;"></i>
+                    This ticket has breached its 48-hour SLA and has been flagged for BoU intervention.
+                </div>
+
+                <div class="timeline">
+                    <div class="tl-label">Resolution Timeline</div>
+                    <div id="tl-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-mask" id="modal-mask">
+        <div class="modal-box">
+            <div class="modal-icon-wrap">
+                <i data-lucide="check-circle" style="width:1.75rem;height:1.75rem;"></i>
+            </div>
+            <div class="modal-title">Complaint Filed!</div>
+            <div class="modal-sub">Your complaint has been logged in the secure Bank of Uganda ledger. Save your ticket number to track progress.</div>
+            <div class="ticket-chip">
+                <span id="modal-ticket">FG-XXXX</span>
+                <i data-lucide="copy" style="width:16px;height:16px;cursor:pointer;color:var(--text-m);" onclick="copyTicket()"></i>
+            </div>
+            <button class="btn-close" onclick="closeModal()">Done</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function closeModal() { document.getElementById('modal-mask').style.display = 'none'; }
+        function copyTicket() {
+            navigator.clipboard.writeText(document.getElementById('modal-ticket').textContent);
+        }
+
+        async function submitReport(e) {
+            e.preventDefault();
+            const fd = new URLSearchParams({
+                phone_number: document.getElementById('phone').value.trim(),
+                provider:     document.getElementById('provider').value,
+                fraud_type:   document.getElementById('fraud-type').value,
+                amount:       document.getElementById('amount').value,
+                notes:        document.getElementById('notes').value.trim()
+            });
+            try {
+                const r = await fetch('/api/complaints', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: fd });
+                if (!r.ok) throw new Error('Server error');
+                const d = await r.json();
+                document.getElementById('modal-ticket').textContent = d.id;
+                document.getElementById('modal-mask').style.display = 'flex';
+                document.getElementById('report-form').reset();
+            } catch(err) { alert('Error: ' + err.message); }
+        }
+
+        async function trackComplaint() {
+            const id = document.getElementById('search-id').value.trim();
+            if (!id) { alert('Please enter a Case ID.'); return; }
+            try {
+                const r = await fetch(`/api/complaints/${id}`);
+                if (r.status === 404) { alert('Case ID not found.'); return; }
+                if (!r.ok) throw new Error('Server error');
+                const d = await r.json();
+
+                document.getElementById('track-empty').style.display = 'none';
+                document.getElementById('track-panel').style.display = 'flex';
+
+                document.getElementById('res-id').textContent = d.id;
+                document.getElementById('res-phone').textContent = d.phone_number;
+                document.getElementById('res-provider').textContent = d.provider + ' Uganda';
+                document.getElementById('res-type').textContent = d.fraud_type;
+                document.getElementById('res-amount').textContent = Number(d.amount).toLocaleString();
+                document.getElementById('res-date').textContent = new Date(d.created_at).toLocaleString();
+                document.getElementById('res-deadline').textContent = new Date(d.sla_deadline).toLocaleString();
+
+                const badge = document.getElementById('res-badge');
+                badge.className = `s-badge s-${d.status}`;
+                badge.textContent = d.status.replace(/_/g,' ');
+
+                const overdue = new Date() > new Date(d.sla_deadline) && d.status !== 'RESOLVED';
+                document.getElementById('sla-warn').style.display = overdue ? 'flex' : 'none';
+
+                // Timeline
+                const tlList = document.getElementById('tl-list');
+                tlList.innerHTML = '';
+
+                const addTlItem = (time, title, desc, type='') => {
+                    const item = document.createElement('div');
+                    item.className = 'tl-item';
+                    item.innerHTML = `
+                        <div class="tl-line">
+                            <div class="tl-dot ${type}"></div>
+                            <div class="tl-connector"></div>
+                        </div>
+                        <div class="tl-body">
+                            <div class="tl-time">${time}</div>
+                            <div class="tl-title">${title}</div>
+                            <div class="tl-desc">${desc}</div>
+                        </div>`;
+                    tlList.appendChild(item);
+                };
+
+                addTlItem(new Date(d.created_at).toLocaleString(), 'Complaint Registered',
+                    `Filed in FraudGuard ledger via ${d.language || 'Web'}.`);
+
+                if (d.status === 'UNDER_INVESTIGATION' || d.status === 'RESOLVED') {
+                    addTlItem(new Date(d.updated_at || d.created_at).toLocaleString(), 'Under Investigation',
+                        `Assigned to ${d.provider} Uganda compliance desk.`);
+                }
+
+                if (d.notes && !d.notes.startsWith('[PENDING]')) {
+                    addTlItem(new Date(d.updated_at).toLocaleString(),
+                        `Update: ${d.status.replace(/_/g,' ')}`, d.notes);
+                }
+
+                if (d.escalated === 1) {
+                    addTlItem('Central Bank Alert', 'Escalated to Bank of Uganda',
+                        'BoU supervisory intervention triggered due to SLA breach.', 'escalated');
+                }
+
+                lucide.createIcons();
+            } catch(err) { alert('Error: ' + err.message); }
+        }
+    </script>
+</body>
+</html>
