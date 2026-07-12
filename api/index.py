@@ -6,8 +6,18 @@ from flask import (Flask, request, render_template, make_response,
 
 # ─── App setup ───────────────────────────────────────────────────────────────
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
-app = Flask(__name__, template_folder=template_dir)
-app.secret_key = os.environ.get('SECRET_KEY', 'fraudguard-bou-2026-dev-secret')
+
+
+def create_app():
+    app = Flask(__name__, template_folder=template_dir)
+    app.secret_key = os.environ.get('SECRET_KEY', 'fraudguard-bou-2026-dev-secret')
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    return app
+
+
+app = create_app()
+application = app
 AFRICASTALKING_SIMULATOR_URL = os.environ.get(
     'AFRICASTALKING_SIMULATOR_URL',
     'https://account.africastalking.com/apps/sandbox/ussd/simulator'
@@ -132,6 +142,10 @@ def home():
 @app.route('/simulator')
 def simulator():
     return render_template('index.html')
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'service': 'fraudguard'})
 
 # ── Login ──────────────────────────────────────────────────────────────────────
 def render_login_page(role, login_action):
@@ -502,4 +516,4 @@ def send_sms(phone, message):
     print(f"[SMS] Sent SMS to {phone}: {message}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
