@@ -11,25 +11,25 @@ const processes = [
   {
     name: 'BOU-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3000'],
+    args: ['next', 'dev', '-p', '3000', '--webpack'],
     env: { NEXT_DIST_DIR: '.next-bou', NEXT_PUBLIC_DASHBOARD_ROLE: 'bou' }
   },
   {
     name: 'MTN-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3002'],
+    args: ['next', 'dev', '-p', '3002', '--webpack'],
     env: { NEXT_DIST_DIR: '.next-mtn', NEXT_PUBLIC_DASHBOARD_ROLE: 'mtn' }
   },
   {
     name: 'Airtel-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3003'],
+    args: ['next', 'dev', '-p', '3003', '--webpack'],
     env: { NEXT_DIST_DIR: '.next-airtel', NEXT_PUBLIC_DASHBOARD_ROLE: 'airtel' }
   },
   {
     name: 'Citizen-Portal',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3004'],
+    args: ['next', 'dev', '-p', '3004', '--webpack'],
     env: { NEXT_DIST_DIR: '.next-citizen', NEXT_PUBLIC_DASHBOARD_ROLE: 'citizen' }
   }
 ];
