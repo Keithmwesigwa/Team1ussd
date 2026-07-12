@@ -330,6 +330,43 @@ router.post('/bou/enforce/sanction', async (req, res) => {
 });
 
 /**
+ * GET /api/v1/analytics/spatial-stream
+ * Server-Sent Events (SSE) broadcast stream for live fraud heatmap
+ */
+router.get('/analytics/spatial-stream', (req, res) => {
+  // Set headers for SSE
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
+
+  // Extract operator identity if provided, otherwise null (BoU sees all)
+  const operatorRole = req.headers['x-operator-identity'] || req.query.operator_role || null;
+
+  // Initial immediate send
+  const sendMetrics = async () => {
+    try {
+      const payload = await db.getLiveGeospatialMetrics(operatorRole);
+      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    } catch (error) {
+      console.error('Error fetching geospatial metrics for SSE:', error);
+    }
+  };
+
+  sendMetrics();
+
+  // Establish heartbeat interval every 5 seconds
+  const intervalId = setInterval(sendMetrics, 5000);
+
+  // Clean up on disconnect
+  req.on('close', () => {
+    clearInterval(intervalId);
+    console.log('SSE connection closed, interval cleared.');
+  });
+});
+
+/**
  * 3. CITIZEN PWA PORTAL ENDPOINTS
  */
 
@@ -466,10 +503,25 @@ router.post('/chat/message', async (req, res) => {
 
 // POST /api/v1/auth/login
 router.post('/auth/login', (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password } = req.body;
 
-  if (!username || !password || !role) {
-    return res.status(400).json({ error: 'Username, password, and role are required.' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username/email and password are required.' });
+  }
+
+  const emailLower = username.toLowerCase().trim();
+  let inferredRole = null;
+
+  if (emailLower.endsWith('bou.go.ug')) {
+    inferredRole = 'bou';
+  } else if (emailLower.endsWith('mtn.co.ug')) {
+    inferredRole = 'mtn';
+  } else if (emailLower.endsWith('airtel.co.ug')) {
+    inferredRole = 'airtel';
+  }
+
+  if (!inferredRole) {
+    return res.status(401).json({ error: 'Invalid username domain. Use an authorized institution email.' });
   }
 
   // Preseeded users
@@ -479,16 +531,16 @@ router.post('/auth/login', (req, res) => {
     airtel: { email: 'agent@airtel.co.ug', pass: 'airtelagent123' }
   };
 
-  const user = adminUsers[role];
-  if (!user || user.email !== username.toLowerCase().trim() || user.pass !== password) {
-    return res.status(401).json({ error: 'Invalid credentials or role mismatch.' });
+  const user = adminUsers[inferredRole];
+  if (!user || user.email !== emailLower || user.pass !== password) {
+    return res.status(401).json({ error: 'Invalid credentials.' });
   }
 
   return res.json({
     success: true,
-    token: `mock-token-${role}-${Math.random().toString(36).substring(2, 9)}`,
+    token: `mock-token-${inferredRole}-${Math.random().toString(36).substring(2, 9)}`,
     username: user.email,
-    role
+    role: inferredRole
   });
 });
 

@@ -1,6 +1,8 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
+const isProd = process.argv.includes('--prod');
+
 const processes = [
   {
     name: 'Compliance-API',
@@ -11,26 +13,26 @@ const processes = [
   {
     name: 'BOU-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3000', '--webpack'],
-    env: { NEXT_DIST_DIR: '.next-bou', NEXT_PUBLIC_DASHBOARD_ROLE: 'bou' }
+    args: isProd ? ['next', 'start', '-p', '3000'] : ['next', 'dev', '-p', '3000', '--webpack'],
+    env: isProd ? {} : { NEXT_DIST_DIR: '.next-bou', NEXT_PUBLIC_DASHBOARD_ROLE: 'bou' }
   },
   {
     name: 'MTN-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3002', '--webpack'],
-    env: { NEXT_DIST_DIR: '.next-mtn', NEXT_PUBLIC_DASHBOARD_ROLE: 'mtn' }
+    args: isProd ? ['next', 'start', '-p', '3002'] : ['next', 'dev', '-p', '3002', '--webpack'],
+    env: isProd ? {} : { NEXT_DIST_DIR: '.next-mtn', NEXT_PUBLIC_DASHBOARD_ROLE: 'mtn' }
   },
   {
     name: 'Airtel-Dashboard',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3003', '--webpack'],
-    env: { NEXT_DIST_DIR: '.next-airtel', NEXT_PUBLIC_DASHBOARD_ROLE: 'airtel' }
+    args: isProd ? ['next', 'start', '-p', '3003'] : ['next', 'dev', '-p', '3003', '--webpack'],
+    env: isProd ? {} : { NEXT_DIST_DIR: '.next-airtel', NEXT_PUBLIC_DASHBOARD_ROLE: 'airtel' }
   },
   {
     name: 'Citizen-Portal',
     command: 'npx',
-    args: ['next', 'dev', '-p', '3004', '--webpack'],
-    env: { NEXT_DIST_DIR: '.next-citizen', NEXT_PUBLIC_DASHBOARD_ROLE: 'citizen' }
+    args: isProd ? ['next', 'start', '-p', '3004'] : ['next', 'dev', '-p', '3004', '--webpack'],
+    env: isProd ? {} : { NEXT_DIST_DIR: '.next-citizen', NEXT_PUBLIC_DASHBOARD_ROLE: 'citizen' }
   }
 ];
 

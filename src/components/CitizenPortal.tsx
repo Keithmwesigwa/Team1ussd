@@ -121,7 +121,7 @@ interface ChatMessage {
   d: string; // date
 }
 
-export default function CitizenPortal({ onRefresh }: { onRefresh: () => void }) {
+export default function CitizenPortal({ onRefresh, authSession, onLogout }: { onRefresh: () => void; authSession?: any; onLogout?: () => void }) {
   const [lang, setLang] = useState<'en' | 'lg' | 'nyn' | 'ach'>('en');
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
   const [isOnline, setIsOnline] = useState(true);
@@ -182,12 +182,16 @@ export default function CitizenPortal({ onRefresh }: { onRefresh: () => void }) 
     window.addEventListener('offline', handleOffline);
 
     // Retrieve citizen session
-    const storedPhone = localStorage.getItem('tulinde_subscriber_phone');
-    const storedToken = localStorage.getItem('tulinde_citizen_token');
-    if (storedPhone && storedToken) {
-      setCitizenPhone(storedPhone);
-      setLoginPhone(storedPhone);
-      setIsCitizenAuth(true);
+    const storedSession = localStorage.getItem('tulinde_active_session');
+    if (storedSession) {
+      const parsed = JSON.parse(storedSession);
+      if (parsed.role === 'citizen') {
+        setCitizenPhone(parsed.username);
+        setLoginPhone(parsed.username);
+        setIsCitizenAuth(true);
+      } else {
+        setIsCitizenAuth(false);
+      }
     } else {
       setIsCitizenAuth(false);
     }
@@ -276,11 +280,13 @@ export default function CitizenPortal({ onRefresh }: { onRefresh: () => void }) 
   };
 
   const handleCitizenLogout = () => {
-    localStorage.removeItem('tulinde_subscriber_phone');
-    localStorage.removeItem('tulinde_citizen_token');
+    localStorage.removeItem('tulinde_active_session');
     setIsCitizenAuth(false);
     setSelectedTicket(null);
     setHistory([]);
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   // Poll ticket history and active chat

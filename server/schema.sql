@@ -39,7 +39,9 @@ CREATE TABLE Complaints (
     initial_transcript TEXT,
     corrected_transcript TEXT,
     status COMPLAINT_STATUS DEFAULT 'under_review' NOT NULL,
-    district VARCHAR(50) NOT NULL, -- e.g. Kampala, Gulu, Masaka
+    district VARCHAR(50) NOT NULL CHECK (district IN ('Kampala', 'Wakiso', 'Mbarara', 'Gulu', 'Masaka', 'Jinja', 'Other')),
+    latitude NUMERIC,
+    longitude NUMERIC,
     channel_source VARCHAR(10) NOT NULL, -- ussd, ivr, sms, app, pwa
     amount_ugx DECIMAL(15, 2) DEFAULT 0.00 NOT NULL,
     sla_deadline TIMESTAMP NOT NULL, -- Calculated as created_at + 48 Hours
@@ -60,6 +62,7 @@ CREATE INDEX idx_subscribers_phone ON Subscribers(phone_number);
 CREATE INDEX idx_complaints_network ON Complaints(network_provider);
 CREATE INDEX idx_complaints_status ON Complaints(status);
 CREATE INDEX idx_complaints_sla_deadline ON Complaints(sla_deadline);
+CREATE INDEX idx_complaints_district_time ON Complaints(district, created_at);
 CREATE INDEX idx_audit_logs_complaint ON SLA_Audit_Logs(complaint_id);
 
 -- 4. PWA Ingested Complaints Table
@@ -71,6 +74,9 @@ CREATE TABLE IF NOT EXISTS PWA_Complaints (
     provider VARCHAR(30) NOT NULL,
     transaction_id VARCHAR(100),
     narrative TEXT NOT NULL,
+    district VARCHAR(50) DEFAULT 'Kampala' NOT NULL CHECK (district IN ('Kampala', 'Wakiso', 'Mbarara', 'Gulu', 'Masaka', 'Jinja', 'Other')),
+    latitude NUMERIC,
+    longitude NUMERIC,
     status VARCHAR(20) DEFAULT 'ingested' NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -87,4 +93,5 @@ CREATE TABLE IF NOT EXISTS PWA_Chat_Messages (
 -- PWA Indices
 CREATE INDEX idx_pwa_complaints_phone ON PWA_Complaints(phone_number);
 CREATE INDEX idx_pwa_complaints_ticket ON PWA_Complaints(ticket_reference);
+CREATE INDEX idx_pwa_complaints_district_time ON PWA_Complaints(district, created_at);
 CREATE INDEX idx_pwa_chat_ticket ON PWA_Chat_Messages(ticket_reference);

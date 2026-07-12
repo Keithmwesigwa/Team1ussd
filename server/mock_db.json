@@ -379,5 +379,45 @@
       "operator_identity": "airtel_agent_valid",
       "timestamp": "2026-07-12T06:03:47.595Z"
     }
+  ],
+  "pwaComplaints": [
+    {
+      "id": "pwa-complaint-uuid-1",
+      "ticket_reference": "BOU-PWA-2026-X982",
+      "phone_number": "+256772123456",
+      "category": "fraud",
+      "provider": "mtn",
+      "transaction_id": "TXN100200300",
+      "narrative": "A caller claiming to be an MTN agent tricked me into swapping my SIM card and stole money.",
+      "status": "escalated",
+      "created_at": "2026-07-12T07:03:31.327Z"
+    },
+    {
+      "id": "pwa-complaint-uuid-2",
+      "ticket_reference": "BOU-PWA-2026-Y479",
+      "phone_number": "+256772123456",
+      "category": "overcharge",
+      "provider": "airtel",
+      "transaction_id": "TXN998877",
+      "narrative": "I was charged twice for a mobile money sending transaction of 50000 UGX.",
+      "status": "resolved",
+      "created_at": "2026-07-09T09:03:31.327Z"
+    }
+  ],
+  "pwaChatMessages": [
+    {
+      "id": "chat-uuid-1",
+      "ticket_reference": "BOU-PWA-2026-X982",
+      "sender_type": "citizen",
+      "message_text": "Hello, my MTN wallet was frozen but the fraudster still managed to swap my SIM card. Please check.",
+      "created_at": "2026-07-12T07:15:31.327Z"
+    },
+    {
+      "id": "chat-uuid-2",
+      "ticket_reference": "BOU-PWA-2026-X982",
+      "sender_type": "operator",
+      "message_text": "Thank you for reporting. We have escalated the issue to the MTN Fraud Risk team.",
+      "created_at": "2026-07-12T07:51:31.327Z"
+    }
   ]
 }

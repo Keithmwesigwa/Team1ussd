@@ -31,6 +31,14 @@ interface AuditLog {
   timestamp: string;
 }
 
+interface GeospatialMetric {
+  district: string;
+  current_vol: number;
+  baseline_vol: string;
+  surge_percent: string;
+  hazard_state: 'CRITICAL' | 'WARNING' | 'MONITORING';
+}
+
 interface BoUDashboardProps {
   complaints: Complaint[];
   auditLogs: AuditLog[];
@@ -45,6 +53,7 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
     loading: false,
     message: null
   });
+  const [geoMetrics, setGeoMetrics] = useState<GeospatialMetric[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -110,6 +119,26 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
       });
     }
   };
+
+  // SSE Connection for Live Geospatial Analytics
+  useEffect(() => {
+    let sseUrl = 'http://localhost:3001/api/v1/analytics/spatial-stream';
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      sseUrl = `${window.location.protocol}//${window.location.hostname}:3001/api/v1/analytics/spatial-stream`;
+    }
+    const sse = new EventSource(sseUrl);
+    
+    sse.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setGeoMetrics(data);
+      } catch (err) {
+        console.error('Failed to parse geospatial metrics', err);
+      }
+    };
+    
+    return () => sse.close();
+  }, []);
 
   // Aggregates for layout display
   const totalLoss = complaints.reduce((sum, c) => sum + Number(c.amount_ugx), 0);
@@ -229,7 +258,137 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
         </div>
       </div>
 
-      {/* SECTION 3: REAL-TIME NATIONAL SYSTEMIC FRAUD TICKER & AUDIO LEDGER */}
+      {/* SECTION 3: LIVE FRAUD HEATMAP & GEOSPATIAL ANOMALY AGGREGATOR */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Sidebar: Notification Badges */}
+        <div className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm flex flex-col gap-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5 text-primary" />
+            <h3 className="text-base font-bold text-text-main">Live Geospatial Alerts</h3>
+          </div>
+          
+          <div className="flex flex-col gap-3 overflow-y-auto max-h-[400px] pr-2">
+            {geoMetrics.length === 0 ? (
+              <div className="text-xs text-text-muted text-center py-10">Initializing radar link...</div>
+            ) : (
+              geoMetrics.map((geo) => (
+                <div key={geo.district} className={`p-4 rounded-xl border flex flex-col gap-2 transition-all ${
+                  geo.hazard_state === 'CRITICAL' ? 'bg-[#EF4444]/10 border-[#EF4444]/30' :
+                  geo.hazard_state === 'WARNING' ? 'bg-[#F97316]/10 border-[#F97316]/30' :
+                  'bg-[#14B8A6]/10 border-[#14B8A6]/30'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text-main flex items-center gap-1.5">
+                      {geo.hazard_state === 'CRITICAL' && (
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EF4444] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#EF4444]"></span>
+                        </span>
+                      )}
+                      {geo.district}
+                    </span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                      geo.hazard_state === 'CRITICAL' ? 'bg-[#EF4444]/20 text-[#EF4444]' :
+                      geo.hazard_state === 'WARNING' ? 'bg-[#F97316]/20 text-[#F97316]' :
+                      'bg-[#14B8A6]/20 text-[#14B8A6]'
+                    }`}>
+                      {geo.hazard_state}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-end text-xs">
+                    <div className="flex flex-col">
+                      <span className="text-text-muted text-[10px]">60-Min Vol</span>
+                      <span className="font-mono font-bold text-text-main">{geo.current_vol}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-text-muted text-[10px]">Baseline (12h)</span>
+                      <span className="font-mono font-bold text-text-main">{geo.baseline_vol}/h</span>
+                    </div>
+                    <div className="flex flex-col text-right">
+                      <span className="text-text-muted text-[10px]">Surge</span>
+                      <span className={`font-mono font-bold ${
+                        Number(geo.surge_percent) > 20 ? 'text-[#EF4444]' :
+                        Number(geo.surge_percent) > 10 ? 'text-[#F97316]' :
+                        'text-[#14B8A6]'
+                      }`}>
+                        +{geo.surge_percent}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Right Canvas: Radar Map Canvas */}
+        <div className="lg:col-span-2 rounded-2xl border border-card-border bg-[#0A0A0C] relative overflow-hidden flex items-center justify-center min-h-[400px]">
+          {/* Conceptual Radar Grid Overlay */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none" 
+            style={{ backgroundImage: 'radial-gradient(#14B8A6 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
+          />
+          <div className="absolute inset-0 flex items-center justify-center opacity-10">
+            <div className="w-[500px] h-[500px] border border-primary rounded-full" />
+            <div className="absolute w-[350px] h-[350px] border border-primary rounded-full" />
+            <div className="absolute w-[200px] h-[200px] border border-primary rounded-full" />
+          </div>
+          
+          <div className="relative w-full h-full max-w-[600px] max-h-[500px] flex items-center justify-center">
+            {geoMetrics.map((geo, idx) => {
+              // Abstract mapping logic for visual effect without actual lat/lon paths
+              const positions: Record<string, { top: string, left: string }> = {
+                'Kampala': { top: '50%', left: '55%' },
+                'Wakiso': { top: '45%', left: '50%' },
+                'Masaka': { top: '70%', left: '40%' },
+                'Mbarara': { top: '80%', left: '20%' },
+                'Gulu': { top: '25%', left: '45%' },
+                'Jinja': { top: '55%', left: '65%' },
+              };
+              
+              const pos = positions[geo.district] || { 
+                top: `${30 + (idx * 15 % 50)}%`, 
+                left: `${70 + (idx * 10 % 20)}%` 
+              };
+
+              const isCritical = geo.hazard_state === 'CRITICAL';
+              const isWarning = geo.hazard_state === 'WARNING';
+              
+              return (
+                <div key={geo.district} className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
+                  style={{ top: pos.top, left: pos.left }}
+                >
+                  <div className="relative flex items-center justify-center">
+                    {isCritical && (
+                      <>
+                        <div className="absolute w-24 h-24 bg-[#EF4444]/10 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+                        <div className="absolute w-12 h-12 bg-[#EF4444]/20 rounded-full animate-ping" style={{ animationDuration: '1.5s' }} />
+                      </>
+                    )}
+                    {isWarning && (
+                      <div className="absolute w-12 h-12 bg-[#F97316]/20 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                    )}
+                    <div className={`w-4 h-4 rounded-full border-2 border-[#0A0A0C] z-10 ${
+                      isCritical ? 'bg-[#EF4444]' :
+                      isWarning ? 'bg-[#F97316]' :
+                      'bg-[#14B8A6]'
+                    }`} />
+                  </div>
+                  <span className={`mt-1 text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#0A0A0C]/80 border ${
+                    isCritical ? 'text-[#EF4444] border-[#EF4444]/30' :
+                    isWarning ? 'text-[#F97316] border-[#F97316]/30' :
+                    'text-[#14B8A6] border-[#14B8A6]/30'
+                  }`}>
+                    {geo.district}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 4: REAL-TIME NATIONAL SYSTEMIC FRAUD TICKER & AUDIO LEDGER */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Real-time Ticker Table (Left 2 Columns) */}
@@ -410,7 +569,7 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
 
       </div>
 
-      {/* SECTION 4: AUDIT LOG TRAIL */}
+      {/* SECTION 5: AUDIT LOG TRAIL */}
       <div className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm">
         <h3 className="text-base font-bold text-text-main mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5 text-primary" /> Regulatory Enforcement Audit Log

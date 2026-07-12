@@ -495,6 +495,113 @@ const db = {
       fs.unlinkSync(mockDbPath);
     }
     loadMockDb();
+  },
+
+  // Analytics
+  async getLiveGeospatialMetrics(operator = null) {
+    if (pool) {
+      let baseFilter = operator ? "AND network_provider = $1" : "";
+      const params = operator ? [operator] : [];
+      
+      const query = `
+        WITH recent_60m AS (
+          SELECT district, COUNT(*) as current_vol
+          FROM Complaints
+          WHERE created_at >= NOW() - INTERVAL '60 minutes'
+          ${baseFilter}
+          GROUP BY district
+        ),
+        baseline_12h AS (
+          SELECT district, COUNT(*)::float / 12.0 as avg_hourly_vol
+          FROM Complaints
+          WHERE created_at >= NOW() - INTERVAL '12 hours'
+            AND created_at < NOW() - INTERVAL '60 minutes'
+          ${baseFilter}
+          GROUP BY district
+        )
+        SELECT 
+          COALESCE(r.district, b.district) as district,
+          COALESCE(r.current_vol, 0) as current_vol,
+          COALESCE(b.avg_hourly_vol, 0) as avg_hourly_vol
+        FROM recent_60m r
+        FULL OUTER JOIN baseline_12h b ON r.district = b.district
+      `;
+      
+      const res = await pool.query(query, params);
+      
+      return res.rows.map(row => {
+        const current = parseInt(row.current_vol);
+        const baseline = parseFloat(row.avg_hourly_vol);
+        
+        let surge_percent = 0;
+        let hazard_state = 'MONITORING';
+        
+        if (baseline > 0) {
+          surge_percent = ((current - baseline) / baseline) * 100;
+        } else if (current > 0) {
+          surge_percent = 100;
+        }
+        
+        if (surge_percent > 20) {
+          hazard_state = 'CRITICAL';
+        } else if (surge_percent > 10) {
+          hazard_state = 'WARNING';
+        }
+        
+        return {
+          district: row.district,
+          current_vol: current,
+          baseline_vol: baseline.toFixed(2),
+          surge_percent: surge_percent.toFixed(2),
+          hazard_state
+        };
+      });
+    } else {
+      const data = loadMockDb();
+      let complaints = data.complaints;
+      if (operator) {
+        complaints = complaints.filter(c => c.network_provider === operator);
+      }
+      
+      const now = new Date();
+      const past60m = new Date(now.getTime() - 60 * 60 * 1000);
+      const past12h = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+      
+      const recent = {};
+      const baseline = {};
+      
+      complaints.forEach(c => {
+        const d = new Date(c.created_at);
+        const dist = c.district || 'Other';
+        if (d >= past60m) {
+          recent[dist] = (recent[dist] || 0) + 1;
+        } else if (d >= past12h && d < past60m) {
+          baseline[dist] = (baseline[dist] || 0) + 1;
+        }
+      });
+      
+      const districts = [...new Set([...Object.keys(recent), ...Object.keys(baseline)])];
+      return districts.map(dist => {
+        const current = recent[dist] || 0;
+        const baseAvg = (baseline[dist] || 0) / 12.0;
+        
+        let surge = 0;
+        let hazard_state = 'MONITORING';
+        if (baseAvg > 0) surge = ((current - baseAvg) / baseAvg) * 100;
+        else if (current > 0) surge = 100;
+        
+        if (surge > 20) hazard_state = 'CRITICAL';
+        else if (surge > 10) hazard_state = 'WARNING';
+        
+        return {
+          district: dist,
+          current_vol: current,
+          baseline_vol: baseAvg.toFixed(2),
+          surge_percent: surge.toFixed(2),
+          hazard_state
+        };
+      });
+    }
   }
 };
 

@@ -7,7 +7,7 @@ import OperatorDashboard from '@/components/OperatorDashboard';
 import CitizenPortal from '@/components/CitizenPortal';
 import { 
   ShieldAlert, Send, Plus, Sparkles, AlertCircle, Phone, 
-  MapPin, HelpCircle, RefreshCw 
+  MapPin, HelpCircle, RefreshCw, CheckCircle
 } from 'lucide-react';
 
 interface Complaint {
@@ -112,10 +112,15 @@ export default function Page() {
   const [apiConnected, setApiConnected] = useState(false);
 
   // Authentication State
-  const [authSession, setAuthSession] = useState<{ username: string; token: string } | null>(null);
+  const [loginMode, setLoginMode] = useState<'portal' | 'citizen'>('portal');
+  const [authSession, setAuthSession] = useState<{ username: string; token: string; role: 'bou' | 'mtn' | 'airtel' | 'citizen' } | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [loginPhone, setLoginPhone] = useState('+256772123456');
+  const [loginOtpCode, setLoginOtpCode] = useState('');
+  const [loginOtpSent, setLoginOtpSent] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccessMsg, setAuthSuccessMsg] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
   // Webhook Simulator state
@@ -151,18 +156,21 @@ export default function Page() {
     }
   }, []);
 
-  // Check storage session on role/mount shift
+  // Check storage session on mount/role shift
   useEffect(() => {
     if (isMounted) {
-      const stored = localStorage.getItem(`tulinde_session_${currentRole}`);
+      const stored = localStorage.getItem('tulinde_active_session');
       if (stored) {
-        setAuthSession(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setAuthSession(parsed);
+        setCurrentRole(parsed.role);
       } else {
         setAuthSession(null);
       }
       setAuthError(null);
+      setAuthSuccessMsg(null);
     }
-  }, [currentRole, isMounted]);
+  }, [isMounted]);
 
   // Bind role and theme selectors to html DOM elements (triggers global CSS vars switches)
   useEffect(() => {
@@ -236,16 +244,16 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: loginEmail,
-          password: loginPassword,
-          role: currentRole
+          password: loginPassword
         })
       });
 
       if (res.ok) {
         const data = await res.json();
-        const session = { username: data.username, token: data.token };
-        localStorage.setItem(`tulinde_session_${currentRole}`, JSON.stringify(session));
+        const session = { username: data.username, token: data.token, role: data.role };
+        localStorage.setItem('tulinde_active_session', JSON.stringify(session));
         setAuthSession(session);
+        setCurrentRole(data.role);
         setLoginEmail('');
         setLoginPassword('');
       } else {
@@ -254,25 +262,113 @@ export default function Page() {
       }
     } catch (err) {
       console.warn('Authentication API server offline. Using local fallback validation.');
+      const emailLower = loginEmail.toLowerCase().trim();
+      let inferredRole: 'bou' | 'mtn' | 'airtel' | null = null;
+
+      if (emailLower.endsWith('bou.go.ug')) {
+        inferredRole = 'bou';
+      } else if (emailLower.endsWith('mtn.co.ug')) {
+        inferredRole = 'mtn';
+      } else if (emailLower.endsWith('airtel.co.ug')) {
+        inferredRole = 'airtel';
+      }
+
+      if (!inferredRole) {
+        setAuthError('Invalid email domain suffix. (Offline Mode)');
+        setAuthLoading(false);
+        return;
+      }
+
       const adminUsers = {
         bou: { email: 'admin@bou.go.ug', pass: 'bouadmin123' },
         mtn: { email: 'agent@mtn.co.ug', pass: 'mtnagent123' },
         airtel: { email: 'agent@airtel.co.ug', pass: 'airtelagent123' }
       };
 
-      if (currentRole === 'citizen') {
-        setAuthLoading(false);
-        return;
-      }
-      const user = adminUsers[currentRole];
-      if (user && user.email === loginEmail.toLowerCase().trim() && user.pass === loginPassword) {
-        const session = { username: user.email, token: `mock-offline-token-${currentRole}-${Math.random().toString(36).substring(2, 9)}` };
-        localStorage.setItem(`tulinde_session_${currentRole}`, JSON.stringify(session));
+      const user = adminUsers[inferredRole];
+      if (user && user.email === emailLower && user.pass === loginPassword) {
+        const session = { username: user.email, token: `mock-offline-token-${inferredRole}`, role: inferredRole };
+        localStorage.setItem('tulinde_active_session', JSON.stringify(session));
         setAuthSession(session);
+        setCurrentRole(inferredRole);
         setLoginEmail('');
         setLoginPassword('');
       } else {
-        setAuthError('Invalid credentials or role mismatch. (Offline Mode)');
+        setAuthError('Invalid credentials. (Offline Mode)');
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    setAuthSuccessMsg(null);
+
+    const apiHost = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
+
+    try {
+      const res = await fetch(`${apiHost}/api/v1/auth/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: loginPhone })
+      });
+
+      if (res.ok) {
+        setLoginOtpSent(true);
+        setAuthSuccessMsg('Verification code sent! (Use code 123456 to verify)');
+      } else {
+        const err = await res.json();
+        setAuthError(err.error || 'Failed to request verification code.');
+      }
+    } catch (err) {
+      setLoginOtpSent(true);
+      setAuthSuccessMsg('[Offline Fallback] Code simulated! Enter 123456.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+
+    const apiHost = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
+
+    try {
+      const res = await fetch(`${apiHost}/api/v1/auth/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: loginPhone, code: loginOtpCode })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const session = { username: loginPhone, token: data.token, role: 'citizen' as const };
+        localStorage.setItem('tulinde_active_session', JSON.stringify(session));
+        setAuthSession(session);
+        setCurrentRole('citizen');
+        setLoginOtpSent(false);
+        setLoginOtpCode('');
+        setAuthSuccessMsg(null);
+      } else {
+        const err = await res.json();
+        setAuthError(err.error || 'Invalid verification code.');
+      }
+    } catch (err) {
+      if (loginOtpCode === '123456') {
+        const session = { username: loginPhone, token: 'mock-offline-token-citizen', role: 'citizen' as const };
+        localStorage.setItem('tulinde_active_session', JSON.stringify(session));
+        setAuthSession(session);
+        setCurrentRole('citizen');
+        setLoginOtpSent(false);
+        setLoginOtpCode('');
+        setAuthSuccessMsg(null);
+      } else {
+        setAuthError('Invalid verification code.');
       }
     } finally {
       setAuthLoading(false);
@@ -280,13 +376,16 @@ export default function Page() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(`tulinde_session_${currentRole}`);
+    localStorage.removeItem('tulinde_active_session');
     setAuthSession(null);
+    setLoginOtpSent(false);
+    setLoginOtpCode('');
+    setAuthSuccessMsg(null);
+    setAuthError(null);
   };
 
   const handleThemeToggle = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
 
   const triggerIngestWebhook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -383,35 +482,12 @@ export default function Page() {
     );
   }
 
-  if (currentRole === 'citizen') {
-    return (
-      <div className="min-h-screen flex flex-col justify-between">
-        <MasterDock 
-          currentRole={currentRole} 
-          theme={theme} 
-          onRoleChange={handleRoleChange} 
-          onThemeToggle={handleThemeToggle} 
-        />
-        <CitizenPortal onRefresh={loadData} />
-      </div>
-    );
-  }
-
   if (!authSession) {
-    const titles = {
-      bou: "Bank of Uganda • CPRP Command Center",
-      mtn: "CPRP Institution Console • MTN Uganda",
-      airtel: "CPRP Institution Console • Airtel Uganda"
-    };
-
-    const activeTitle = titles[currentRole] || "Compliance Admin Portal";
-
     return (
       <div className="min-h-screen flex flex-col justify-between bg-[#0A0A0C]">
         <MasterDock 
           currentRole={currentRole} 
           theme={theme} 
-          onRoleChange={handleRoleChange} 
           onThemeToggle={handleThemeToggle} 
           authSession={authSession}
           onLogout={handleLogout}
@@ -421,75 +497,176 @@ export default function Page() {
           <div className="w-full max-w-md bg-[#11141E] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
             
+            {/* Header branding */}
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-white tracking-tight">Security Gateway</h2>
-              <p className="text-[10px] uppercase tracking-widest font-extrabold text-text-muted mt-1">{activeTitle}</p>
+              <p className="text-[10px] uppercase tracking-widest font-extrabold text-text-muted mt-1">Consumer Protection Portal (CPRP)</p>
             </div>
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Authorized Username / Email</label>
-                <input 
-                  type="email" 
-                  required
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="name@domain.co.ug"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Secure Password</label>
-                <input 
-                  type="password" 
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-
-              {authError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
-                  <span>{authError}</span>
-                </div>
-              )}
-
-              <button 
-                type="submit"
-                disabled={authLoading}
-                className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md ${
-                  currentRole === 'mtn' ? 'bg-[#FFCC00] text-black hover:bg-[#FFCC00]/90' :
-                  currentRole === 'airtel' ? 'bg-[#E40000] text-white hover:bg-[#E40000]/90' :
-                  'bg-[#800020] text-white hover:bg-[#800020]/90'
-                }`}
+            {/* Tab switcher */}
+            <div className="flex bg-slate-950 border border-slate-900 rounded-full p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => { setLoginMode('portal'); setAuthError(null); setAuthSuccessMsg(null); }}
+                className={`flex-1 py-2 text-center text-xs font-bold rounded-full transition cursor-pointer ${loginMode === 'portal' ? 'bg-[#2563EB] text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
               >
-                {authLoading ? 'Authorizing Session...' : 'Establish Session'}
+                Portal Sign In
               </button>
-            </form>
+              <button
+                type="button"
+                onClick={() => { setLoginMode('citizen'); setAuthError(null); setAuthSuccessMsg(null); }}
+                className={`flex-1 py-2 text-center text-xs font-bold rounded-full transition cursor-pointer ${loginMode === 'citizen' ? 'bg-[#D97706] text-black font-extrabold shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                Consumer Access
+              </button>
+            </div>
 
+            {loginMode === 'portal' ? (
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Authorized Username / Email</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="name@domain.co.ug"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Secure Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                {authError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                <button 
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-3 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md"
+                >
+                  {authLoading ? 'Authorizing Session...' : 'Establish Session'}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                {!loginOtpSent ? (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Registered Phone Number</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={loginPhone}
+                        onChange={(e) => setLoginPhone(e.target.value)}
+                        placeholder="e.g. +256772123456"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+
+                    {authError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
+                        <span>{authError}</span>
+                      </div>
+                    )}
+
+                    <button 
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full py-3 bg-[#D97706] hover:bg-[#D97706]/90 text-black rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-md"
+                    >
+                      {authLoading ? 'Requesting OTP...' : 'Send Verification OTP'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Verification Code (OTP)</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={loginOtpCode}
+                        onChange={(e) => setLoginOtpCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+
+                    {authSuccessMsg && (
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                        <CheckCircle className="w-4.5 h-4.5 flex-shrink-0" />
+                        <span>{authSuccessMsg}</span>
+                      </div>
+                    )}
+
+                    {authError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
+                        <span>{authError}</span>
+                      </div>
+                    )}
+
+                    <button 
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md"
+                    >
+                      {authLoading ? 'Verifying OTP...' : 'Establish Session'}
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setLoginOtpSent(false)}
+                      className="w-full text-slate-400 hover:text-white text-[10px] font-bold transition text-center block"
+                    >
+                      ← Change Phone Number
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* Test helper */}
             <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
-              <span className="text-[9px] font-black text-[#D97706] tracking-wider uppercase block">Developer Test Credentials:</span>
-              <div className="bg-slate-950/80 border border-slate-900 rounded-xl p-3 text-[10px] font-mono text-slate-400 space-y-1">
-                {currentRole === 'bou' && (
+              <span className="text-[9px] font-black text-[#D97706] tracking-wider uppercase block">Developer Test Access:</span>
+              <div className="bg-slate-950/80 border border-slate-900 rounded-xl p-3 text-[10px] font-mono text-slate-400 space-y-2 leading-relaxed">
+                {loginMode === 'portal' ? (
+                  <>
+                    <div>
+                      <span className="text-white block font-bold">Bank of Uganda Admin:</span>
+                      Email: <strong className="text-blue-400">admin@bou.go.ug</strong><br/>
+                      Password: <strong>bouadmin123</strong>
+                    </div>
+                    <div className="border-t border-white/5 pt-1">
+                      <span className="text-white block font-bold">MTN Uganda Agent:</span>
+                      Email: <strong className="text-yellow-400">agent@mtn.co.ug</strong><br/>
+                      Password: <strong>mtnagent123</strong>
+                    </div>
+                    <div className="border-t border-white/5 pt-1">
+                      <span className="text-white block font-bold">Airtel Uganda Agent:</span>
+                      Email: <strong className="text-red-400">agent@airtel.co.ug</strong><br/>
+                      Password: <strong>airtelagent123</strong>
+                    </div>
+                  </>
+                ) : (
                   <div>
-                    <span className="text-white">Email:</span> admin@bou.go.ug<br/>
-                    <span className="text-white">Password:</span> bouadmin123
-                  </div>
-                )}
-                {currentRole === 'mtn' && (
-                  <div>
-                    <span className="text-white">Email:</span> agent@mtn.co.ug<br/>
-                    <span className="text-white">Password:</span> mtnagent123
-                  </div>
-                )}
-                {currentRole === 'airtel' && (
-                  <div>
-                    <span className="text-white">Email:</span> agent@airtel.co.ug<br/>
-                    <span className="text-white">Password:</span> airtelagent123
+                    <span className="text-white block font-bold">Subscriber Access:</span>
+                    Enter any phone number and use verification code: <strong className="text-emerald-400">123456</strong>
                   </div>
                 )}
               </div>
@@ -504,6 +681,21 @@ export default function Page() {
     );
   }
 
+  if (currentRole === 'citizen') {
+    return (
+      <div className="min-h-screen flex flex-col justify-between">
+        <MasterDock 
+          currentRole={currentRole} 
+          theme={theme} 
+          onThemeToggle={handleThemeToggle} 
+          authSession={authSession}
+          onLogout={handleLogout}
+        />
+        <CitizenPortal onRefresh={loadData} authSession={authSession} onLogout={handleLogout} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col justify-between">
       
@@ -511,7 +703,6 @@ export default function Page() {
       <MasterDock 
         currentRole={currentRole} 
         theme={theme} 
-        onRoleChange={handleRoleChange} 
         onThemeToggle={handleThemeToggle} 
         authSession={authSession}
         onLogout={handleLogout}

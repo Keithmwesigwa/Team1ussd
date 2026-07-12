@@ -36,60 +36,6 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
         </div>
       </div>
 
-      {/* Floating Controller Selector */}
-      <div className="flex items-center gap-3 bg-progress-bg p-1.5 rounded-full border border-card-border shadow-inner">
-        {/* BOU Mode Tab */}
-        <button
-          onClick={() => onRoleChange('bou')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
-            currentRole === 'bou'
-              ? 'bg-[#800020] text-white shadow-md scale-105'
-              : 'text-text-muted hover:text-text-main'
-          }`}
-        >
-          <Shield className="w-4 h-4" />
-          BoU Mode
-        </button>
-
-        {/* MTN Mode Tab */}
-        <button
-          onClick={() => onRoleChange('mtn')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
-            currentRole === 'mtn'
-              ? 'bg-[#FFCC00] text-black shadow-md scale-105'
-              : 'text-text-muted hover:text-text-main'
-          }`}
-        >
-          <Radio className="w-4 h-4" />
-          MTN Mode
-        </button>
-
-        {/* Airtel Mode Tab */}
-        <button
-          onClick={() => onRoleChange('airtel')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
-            currentRole === 'airtel'
-              ? 'bg-[#E40000] text-white shadow-md scale-105'
-              : 'text-text-muted hover:text-text-main'
-          }`}
-        >
-          <Signal className="w-4 h-4" />
-          Airtel Mode
-        </button>
-
-        {/* Citizen Mode Tab */}
-        <button
-          onClick={() => onRoleChange('citizen')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
-            currentRole === 'citizen'
-              ? 'bg-[#2563EB] text-white shadow-md scale-105'
-              : 'text-text-muted hover:text-text-main'
-          }`}
-        >
-          <Smartphone className="w-4 h-4" />
-          Citizen Portal
-        </button>
-      </div>
 
       {/* Right side controls */}
       <div className="flex items-center gap-3">
