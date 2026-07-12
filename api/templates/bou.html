@@ -54,49 +54,45 @@
         .role-chip { background:rgba(252,211,77,.15); border:1px solid rgba(252,211,77,.3); color:#fcd34d; padding:.3rem .9rem; border-radius:99px; font-size:.75rem; font-weight:700; }
         .logout-btn { display:flex; align-items:center; gap:.4rem; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.8); padding:.4rem .9rem; border-radius:8px; font-size:.8rem; font-weight:700; cursor:pointer; text-decoration:none; transition:all .18s; }
         .logout-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+        /* ─── STATS GRID & CARDS ─── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.25rem;
+            gap: 1rem;
             margin-bottom: 0.5rem;
         }
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
+            border-left: 3px solid #64748b;
             border-radius: var(--radius);
-            padding: 1.25rem;
+            padding: 1.25rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
             box-shadow: var(--shadow);
-            transition: transform .2s ease;
+            transition: box-shadow .2s ease, transform .2s ease;
         }
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
+        .stat-card:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,.08); }
         .stat-card .sc-icon {
-            width: 2.75rem;
-            height: 2.75rem;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid var(--border);
-            color: var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,.02);
+            width: 2.5rem; height: 2.5rem; border-radius: 10px;
+            background: var(--bg-muted); border: 1px solid var(--border);
+            color: #64748b;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
-        .stat-card.total { background: #eff6ff; border-color: #bfdbfe; }
-        .stat-card.total .sc-icon { color: #1e3a8a; }
-        .stat-card.active { background: #faf5ff; border-color: #e9d5ff; }
-        .stat-card.active .sc-icon { color: #6b21a8; }
-        .stat-card.resolved { background: #ecfdf5; border-color: #a7f3d0; }
-        .stat-card.resolved .sc-icon { color: #065f46; }
-        .stat-card.breached { background: #fef2f2; border-color: #fca5a5; }
-        .stat-card.breached .sc-icon { color: #991b1b; }
+        /* Left border & icon colour by status */
+        .stat-card.total        { border-left-color: #64748b; }
+        .stat-card.total        .sc-icon { color: #64748b; }
+        .stat-card.active       { border-left-color: #d97706; }
+        .stat-card.active       .sc-icon { color: #d97706; }
+        .stat-card.resolved     { border-left-color: #059669; }
+        .stat-card.resolved     .sc-icon { color: #059669; }
+        .stat-card.breached     { border-left-color: #dc2626; }
+        .stat-card.breached     .sc-icon { color: #dc2626; }
 
-        .stat-val { font-size: 1.6rem; font-weight: 800; color: var(--text-h); line-height: 1.1; }
-        .stat-lbl { font-size: .72rem; font-weight: 700; color: var(--text-m); text-transform: uppercase; letter-spacing: .4px; }
+        .stat-val { font-size: 1.75rem; font-weight: 800; color: var(--text-h); line-height: 1; }
+        .stat-lbl { font-size: .7rem; font-weight: 600; color: var(--text-m); text-transform: uppercase; letter-spacing: .5px; margin-top: .25rem; }
 
         /* Provider comparison */
         .prov-block { display:flex; flex-direction:column; gap:.35rem; }
@@ -105,7 +101,7 @@
         .prov-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
         .prov-bar-fill.mtn    { background:#ca8a04; }
         .prov-bar-fill.airtel { background:#dc2626; }
-        .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }content:space-between; }
+        .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }
 
         /* ─── CONTENT ─── */
         .content { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:1.75rem 2rem; display:flex; flex-direction:column; gap:1.5rem; }

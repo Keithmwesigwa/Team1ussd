@@ -40,9 +40,10 @@ translation_matrix = {
         'opt1':             "1. Report Mobile Money Fraud",
         'opt2':             "2. Track Active Complaint",
         'opt3':             "3. Change Language / Ennimi",
-        'select_provider':  "Select Affected Provider:",
+        'channel_choice':   "How would you like to report?\n1. Continue with USSD\n2. Switch to a Voice Call",
         'select_fraud_type':"Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
         'ivr_redirect':     "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
+        'ivr_switch':       "Connecting you to a fraud reporting voice call. Please answer your phone.",
         'status_redirect':  "Fetching status. You will receive an automated voice update call shortly.",
         'active_case':      "Active Case ({id}): {status}.\nDetails: {notes}...",
         'no_case':          "No active complaints found for your phone number ({phone}).",
@@ -54,9 +55,10 @@ translation_matrix = {
         'opt1':             "1. Loopa obufere",
         'opt2':             "2. Manya okugenda mu maaso kw'omusango",
         'opt3':             "3. Kyusa olulimi / Change Language",
-        'select_provider':  "Londa kampuni y'essimu ekozesseddwa:",
+        'channel_choice':   "Oyagala kukola mutya?\n1. Endedeeza mu USSD\n2. Talikira essimu",
         'select_fraud_type':"Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
         'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
+        'ivr_switch':       "Tukukubirira essimu gy'okwemulugunya. Teeka essimu.",
         'status_redirect':  "Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
         'active_case':      "Active Case ({id}) - Manya okugenda mu maaso: {status}.\nEbirowoozo: {notes}...",
         'no_case':          "Active Case: Tewali musango gwonna ogusangiddwa ku ssimu yo ({phone}).",
@@ -68,9 +70,10 @@ translation_matrix = {
         'opt1':             "1. Handiika okwiba kw'esente z'omumasingo",
         'opt2':             "2. Mazima omusango gwawe oku guri",
         'opt3':             "3. Hindura Orurimi / Change Language",
-        'select_provider':  "Toorana kampuni y'esimu eyafiiswaho:",
+        'channel_choice':   "Oyagala kuhandiika mutya?\n1. Endeeza mu USSD\n2. Gwata esimu",
         'select_fraud_type':"Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
         'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
+        'ivr_switch':       "Tukuteererera esimu y'okwemurugunya. Gwata esimu yawe.",
         'status_redirect':  "Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
         'active_case':      "Active Case ({id}) - Manya omusango gwawe: {status}.\nEbirowoozo: {notes}...",
         'no_case':          "Active Case: Tihariho musango gw'okwiba ogusangirwe ahari esimu yawe ({phone}).",
@@ -78,6 +81,29 @@ translation_matrix = {
         'invalid':          "Okora enshobi. Yegarukemu.",
     },
 }
+
+
+def detect_provider(phone_number):
+    """Infer mobile provider from Ugandan phone number prefix."""
+    n = phone_number.replace(' ', '').replace('-', '')
+    if n.startswith('+256'):
+        prefix = n[4:6]
+    elif n.startswith('256'):
+        prefix = n[3:5]
+    elif n.startswith('0'):
+        prefix = n[1:3]
+    else:
+        prefix = n[:2]
+
+    MTN_PREFIXES    = {'77', '78', '76', '39', '31'}
+    AIRTEL_PREFIXES = {'70', '75', '74', '20'}
+
+    if prefix in MTN_PREFIXES:
+        return ('MTN Uganda', 'MTN')
+    elif prefix in AIRTEL_PREFIXES:
+        return ('Airtel Uganda', 'AIRTEL')
+    else:
+        return ('MTN Uganda', 'MTN')  # default fallback
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PORTAL ROUTES
@@ -246,26 +272,27 @@ def ussd():
                     f"{t['opt2']}\n"
                     f"{t['opt3']}")
 
-    # BRANCH 1: REPORT FRAUD – provider selection
+    # BRANCH 1: REPORT FRAUD – channel choice (USSD or Voice Call)
     elif text == '1':
-        response = (f"CON {t['select_provider']}\n"
-                    "1. MTN Uganda\n"
-                    "2. Airtel Uganda")
+        response = f"CON {t['channel_choice']}"
 
-    # BRANCH 1*1 / 1*2: fraud type selection
-    elif text in ('1*1', '1*2'):
-        provider = 'MTN Uganda' if text == '1*1' else 'Airtel Uganda'
-        response = f"CON {t['select_fraud_type'].format(provider=provider)}"
+    # BRANCH 1*1: fraud type selection (USSD reporting path)
+    elif text == '1*1':
+        provider_name, _ = detect_provider(phone_number)
+        response = f"CON {t['select_fraud_type'].format(provider=provider_name)}"
 
-    # BRANCH 1*[provider]*[fraud]: file complaint
-    elif input_chain[0] == '1' and len(input_chain) == 3:
-        provider_choice = input_chain[1]
-        fraud_choice    = input_chain[2]
+    # BRANCH 1*2: switch to voice call
+    elif text == '1*2':
+        provider_name, _ = detect_provider(phone_number)
+        trigger_outbound_ivr(phone_number, provider_name, current_lang)
+        response = f"END {t['ivr_switch']}"
 
-        if provider_choice in ('1', '2') and fraud_choice in ('1', '2', '3'):
-            provider_name = 'MTN Uganda' if provider_choice == '1' else 'Airtel Uganda'
-            provider_short = 'MTN' if provider_choice == '1' else 'AIRTEL'
+    # BRANCH 1*1*[fraud]: file complaint via USSD
+    elif input_chain[0] == '1' and len(input_chain) == 3 and input_chain[1] == '1':
+        fraud_choice = input_chain[2]
+        provider_name, provider_short = detect_provider(phone_number)
 
+        if fraud_choice in ('1', '2', '3'):
             fraud_types = {
                 'en':  {'1': "Unauthorised transaction",
                         '2': "Scammers pretending to be staff",
