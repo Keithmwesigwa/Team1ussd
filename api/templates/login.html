@@ -18,13 +18,13 @@
             
             /* Theme overrides dynamically injected via Flask */
             {% if role == 'mtn' %}
-            --accent-theme: #eab308; /* MTN Yellow */
+            --accent-theme: #eab308; /* Telecom X Amber */
             --accent-theme-hover: #ca8a04;
             --logo-bg: #1e1b4b;
             --logo-fg: #facc15;
             --role-name: "Telecom X Compliance Desk";
             {% elif role == 'airtel' %}
-            --accent-theme: #dc2626; /* Airtel Red */
+            --accent-theme: #dc2626; /* Telecom Y Red */
             --accent-theme-hover: #b91c1c;
             --logo-bg: #dc2626;
             --logo-fg: #ffffff;
@@ -224,9 +224,9 @@
         <div class="logo-section">
             <div class="logo-icon">
                 {% if role == 'mtn' %}
-                M
+                X
                 {% elif role == 'airtel' %}
-                A
+                Y
                 {% else %}
                 B
                 {% endif %}

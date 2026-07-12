@@ -44,7 +44,7 @@ def run_tests():
     print("\n[TEST 2] File a New Web Complaint")
     report_payload = {
         "phone_number": "+256788888888",
-        "provider": "MTN",
+        "provider": "TELECOM A",
         "fraud_type": "Phishing/Online Scam",
         "amount": 250000.0,
         "notes": "Received phishing link claiming to double funds."
@@ -105,7 +105,7 @@ def run_tests():
         "sessionId": "session_at_9999",
         "serviceCode": "*254#",
         "phoneNumber": "+256799000000",
-        "text": "1*1*1"  # Report Fraud -> MTN -> Unauthorised transaction
+        "text": "1*1*Unauthorized sim swap description"  # Report Fraud -> USSD -> Brief Description
     }
     ussd_res = request_api("/ussd", method="POST", data=ussd_report_payload)
     print(f"USSD Response:\n{ussd_res}")
