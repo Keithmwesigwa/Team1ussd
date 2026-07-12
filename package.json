@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"nodemon server/server.js\"",
+    "dev": "node server/start_dashboards.js",
     "dev:next": "next dev",
     "dev:server": "nodemon server/server.js",
     "build": "next build",

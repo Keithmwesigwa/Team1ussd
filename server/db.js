@@ -133,20 +133,83 @@ const initialAuditLogs = [
   { id: 'log-uuid-2', complaint_id: 'complaint-uuid-5', action_taken: 'resolve_dispute', operator_identity: 'mtn_agent_45', timestamp: hoursAgo(28) }
 ];
 
+const initialPwaComplaints = [
+  {
+    id: 'pwa-complaint-uuid-1',
+    ticket_reference: 'BOU-PWA-2026-X982',
+    phone_number: '+256772123456',
+    category: 'fraud',
+    provider: 'mtn',
+    transaction_id: 'TXN100200300',
+    narrative: 'A caller claiming to be an MTN agent tricked me into swapping my SIM card and stole money.',
+    status: 'escalated',
+    created_at: hoursAgo(2)
+  },
+  {
+    id: 'pwa-complaint-uuid-2',
+    ticket_reference: 'BOU-PWA-2026-Y479',
+    phone_number: '+256772123456',
+    category: 'overcharge',
+    provider: 'airtel',
+    transaction_id: 'TXN998877',
+    narrative: 'I was charged twice for a mobile money sending transaction of 50000 UGX.',
+    status: 'resolved',
+    created_at: hoursAgo(72)
+  }
+];
+
+const initialPwaChatMessages = [
+  {
+    id: 'chat-uuid-1',
+    ticket_reference: 'BOU-PWA-2026-X982',
+    sender_type: 'citizen',
+    message_text: 'Hello, my MTN wallet was frozen but the fraudster still managed to swap my SIM card. Please check.',
+    created_at: hoursAgo(1.8)
+  },
+  {
+    id: 'chat-uuid-2',
+    ticket_reference: 'BOU-PWA-2026-X982',
+    sender_type: 'operator',
+    message_text: 'Thank you for reporting. We have escalated the issue to the MTN Fraud Risk team.',
+    created_at: hoursAgo(1.2)
+  }
+];
+
 function loadMockDb() {
+  const defaultData = {
+    subscribers: initialSubscribers,
+    complaints: initialComplaints,
+    auditLogs: initialAuditLogs,
+    pwaComplaints: initialPwaComplaints,
+    pwaChatMessages: initialPwaChatMessages
+  };
+  
   if (!fs.existsSync(mockDbPath)) {
-    const data = { subscribers: initialSubscribers, complaints: initialComplaints, auditLogs: initialAuditLogs };
-    fs.writeFileSync(mockDbPath, JSON.stringify(data, null, 2), 'utf8');
-    return data;
+    fs.writeFileSync(mockDbPath, JSON.stringify(defaultData, null, 2), 'utf8');
+    return defaultData;
   }
   try {
     const dataStr = fs.readFileSync(mockDbPath, 'utf8');
-    return JSON.parse(dataStr);
+    const parsed = JSON.parse(dataStr);
+    
+    // Ensure all tables exist in parsed object
+    let modified = false;
+    if (!parsed.pwaComplaints) {
+      parsed.pwaComplaints = initialPwaComplaints;
+      modified = true;
+    }
+    if (!parsed.pwaChatMessages) {
+      parsed.pwaChatMessages = initialPwaChatMessages;
+      modified = true;
+    }
+    if (modified) {
+      saveMockDb(parsed);
+    }
+    return parsed;
   } catch (err) {
     console.error('Failed to parse mock_db.json, recreating...', err);
-    const data = { subscribers: initialSubscribers, complaints: initialComplaints, auditLogs: initialAuditLogs };
-    fs.writeFileSync(mockDbPath, JSON.stringify(data, null, 2), 'utf8');
-    return data;
+    fs.writeFileSync(mockDbPath, JSON.stringify(defaultData, null, 2), 'utf8');
+    return defaultData;
   }
 }
 
@@ -307,6 +370,122 @@ const db = {
       data.auditLogs.push(log);
       saveMockDb(data);
       return log;
+    }
+  },
+
+  // PWA Complaints Methods
+  async getPwaComplaints(phone) {
+    if (pool) {
+      const res = await pool.query(
+        'SELECT * FROM PWA_Complaints WHERE phone_number = $1 ORDER BY created_at DESC',
+        [phone]
+      );
+      return res.rows;
+    } else {
+      const data = loadMockDb();
+      return (data.pwaComplaints || []).filter(c => c.phone_number === phone).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+  },
+
+  async getPwaComplaintByReference(ref) {
+    if (pool) {
+      const res = await pool.query(
+        'SELECT * FROM PWA_Complaints WHERE ticket_reference = $1',
+        [ref]
+      );
+      return res.rows[0] || null;
+    } else {
+      const data = loadMockDb();
+      return (data.pwaComplaints || []).find(c => c.ticket_reference === ref) || null;
+    }
+  },
+
+  async createPwaComplaint(complaint) {
+    if (pool) {
+      const res = await pool.query(
+        'INSERT INTO PWA_Complaints(id, ticket_reference, phone_number, category, provider, transaction_id, narrative, status, created_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+        [
+          complaint.id,
+          complaint.ticket_reference,
+          complaint.phone_number,
+          complaint.category,
+          complaint.provider,
+          complaint.transaction_id || null,
+          complaint.narrative,
+          complaint.status || 'ingested',
+          complaint.created_at || new Date().toISOString()
+        ]
+      );
+      return res.rows[0];
+    } else {
+      const data = loadMockDb();
+      data.pwaComplaints = data.pwaComplaints || [];
+      const newComp = {
+        id: complaint.id,
+        ticket_reference: complaint.ticket_reference,
+        phone_number: complaint.phone_number,
+        category: complaint.category,
+        provider: complaint.provider,
+        transaction_id: complaint.transaction_id || null,
+        narrative: complaint.narrative,
+        status: complaint.status || 'ingested',
+        created_at: complaint.created_at || new Date().toISOString()
+      };
+      data.pwaComplaints.push(newComp);
+      saveMockDb(data);
+      return newComp;
+    }
+  },
+
+  // PWA Chat Messages Methods
+  async getPwaChatMessages(ref) {
+    if (pool) {
+      const res = await pool.query(
+        'SELECT id, ticket_reference, sender_type, message_text, created_at FROM PWA_Chat_Messages WHERE ticket_reference = $1 ORDER BY created_at ASC',
+        [ref]
+      );
+      return res.rows;
+    } else {
+      const data = loadMockDb();
+      return (data.pwaChatMessages || [])
+        .filter(m => m.ticket_reference === ref)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map(m => ({
+          id: m.id,
+          ticket_reference: m.ticket_reference,
+          sender_type: m.sender_type,
+          message_text: m.message_text,
+          created_at: m.created_at
+        }));
+    }
+  },
+
+  async createPwaChatMessage(msg) {
+    if (pool) {
+      const res = await pool.query(
+        'INSERT INTO PWA_Chat_Messages(id, ticket_reference, sender_type, message_text, created_at) VALUES($1, $2, $3, $4, $5) RETURNING *',
+        [
+          msg.id || null,
+          msg.ticket_reference,
+          msg.sender_type,
+          msg.message_text,
+          msg.created_at || new Date().toISOString()
+        ]
+      );
+      return res.rows[0];
+    } else {
+      const data = loadMockDb();
+      data.pwaChatMessages = data.pwaChatMessages || [];
+      const newMsg = {
+        id: msg.id || 'chat-' + Math.random().toString(36).substring(2, 11),
+        ticket_reference: msg.ticket_reference,
+        sender_type: msg.sender_type,
+        message_text: msg.message_text,
+        created_at: msg.created_at || new Date().toISOString()
+      };
+      data.pwaChatMessages.push(newMsg);
+      saveMockDb(data);
+      return newMsg;
     }
   },
 

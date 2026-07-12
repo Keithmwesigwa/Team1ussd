@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import MasterDock from '@/components/MasterDock';
 import BoUDashboard from '@/components/BoUDashboard';
 import OperatorDashboard from '@/components/OperatorDashboard';
+import CitizenPortal from '@/components/CitizenPortal';
 import { 
   ShieldAlert, Send, Plus, Sparkles, AlertCircle, Phone, 
   MapPin, HelpCircle, RefreshCw 
@@ -103,7 +104,8 @@ const initialComplaintsFallback = (now: Date): Complaint[] => [
 ];
 
 export default function Page() {
-  const [currentRole, setCurrentRole] = useState<'bou' | 'mtn' | 'airtel'>('bou');
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentRole, setCurrentRole] = useState<'bou' | 'mtn' | 'airtel' | 'citizen'>('bou');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -120,12 +122,35 @@ export default function Page() {
   const [simLoading, setSimLoading] = useState(false);
   const [simSuccessMsg, setSimSuccessMsg] = useState<string | null>(null);
 
+  // Resolve active portal/dashboard role dynamically on mount
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      const hostname = window.location.hostname;
+      const envRole = process.env.NEXT_PUBLIC_DASHBOARD_ROLE as 'bou' | 'mtn' | 'airtel' | 'citizen';
+
+      let detectedRole: 'bou' | 'mtn' | 'airtel' | 'citizen' = 'bou';
+      if (envRole === 'bou' || envRole === 'mtn' || envRole === 'airtel' || envRole === 'citizen') {
+        detectedRole = envRole;
+      } else if (port === '3002' || hostname.includes('mtn.')) {
+        detectedRole = 'mtn';
+      } else if (port === '3003' || hostname.includes('airtel.')) {
+        detectedRole = 'airtel';
+      } else if (port === '3004' || hostname.includes('citizen.')) {
+        detectedRole = 'citizen';
+      }
+      setCurrentRole(detectedRole);
+    }
+  }, []);
+
   // Bind role and theme selectors to html DOM elements (triggers global CSS vars switches)
   useEffect(() => {
+    if (!isMounted) return;
     const root = document.documentElement;
     root.setAttribute('data-role', currentRole);
     root.setAttribute('data-theme', theme);
-  }, [currentRole, theme]);
+  }, [currentRole, theme, isMounted]);
 
   const loadData = async () => {
     try {
@@ -159,7 +184,22 @@ export default function Page() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleRoleChange = (role: 'bou' | 'mtn' | 'airtel') => {
+  const handleRoleChange = (role: 'bou' | 'mtn' | 'airtel' | 'citizen') => {
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      const hostname = window.location.hostname;
+      // If we are running on dedicated ports, redirect instead of state switching
+      if (port === '3000' || port === '3002' || port === '3003' || port === '3004' || hostname.includes('localhost')) {
+        const urls = {
+          bou: `${window.location.protocol}//${window.location.hostname}:3000`,
+          mtn: `${window.location.protocol}//${window.location.hostname}:3002`,
+          airtel: `${window.location.protocol}//${window.location.hostname}:3003`,
+          citizen: `${window.location.protocol}//${window.location.hostname}:3004`
+        };
+        window.location.href = urls[role];
+        return;
+      }
+    }
     setCurrentRole(role);
   };
 
@@ -253,6 +293,28 @@ export default function Page() {
       setSimSlang("Nabadde ntuma ssente naye bankubye sente nyingi nnyo ku transaction fee");
     }
   };
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0C] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#800020]"></div>
+      </div>
+    );
+  }
+
+  if (currentRole === 'citizen') {
+    return (
+      <div className="min-h-screen flex flex-col justify-between">
+        <MasterDock 
+          currentRole={currentRole} 
+          theme={theme} 
+          onRoleChange={handleRoleChange} 
+          onThemeToggle={handleThemeToggle} 
+        />
+        <CitizenPortal onRefresh={loadData} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col justify-between">

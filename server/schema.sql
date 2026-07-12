@@ -61,3 +61,30 @@ CREATE INDEX idx_complaints_network ON Complaints(network_provider);
 CREATE INDEX idx_complaints_status ON Complaints(status);
 CREATE INDEX idx_complaints_sla_deadline ON Complaints(sla_deadline);
 CREATE INDEX idx_audit_logs_complaint ON SLA_Audit_Logs(complaint_id);
+
+-- 4. PWA Ingested Complaints Table
+CREATE TABLE IF NOT EXISTS PWA_Complaints (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_reference VARCHAR(50) UNIQUE NOT NULL,
+    phone_number VARCHAR(15) NOT NULL,
+    category VARCHAR(30) NOT NULL,
+    provider VARCHAR(30) NOT NULL,
+    transaction_id VARCHAR(100),
+    narrative TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'ingested' NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- 5. PWA Chat Messages Table
+CREATE TABLE IF NOT EXISTS PWA_Chat_Messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_reference VARCHAR(50) NOT NULL REFERENCES PWA_Complaints(ticket_reference) ON DELETE CASCADE,
+    sender_type VARCHAR(20) NOT NULL, -- 'citizen', 'operator'
+    message_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- PWA Indices
+CREATE INDEX idx_pwa_complaints_phone ON PWA_Complaints(phone_number);
+CREATE INDEX idx_pwa_complaints_ticket ON PWA_Complaints(ticket_reference);
+CREATE INDEX idx_pwa_chat_ticket ON PWA_Chat_Messages(ticket_reference);

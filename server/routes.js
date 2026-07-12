@@ -329,4 +329,135 @@ router.post('/bou/enforce/sanction', async (req, res) => {
   }
 });
 
+/**
+ * 3. CITIZEN PWA PORTAL ENDPOINTS
+ */
+
+// POST /api/v1/complaints/ingest
+router.post('/complaints/ingest', async (req, res) => {
+  try {
+    const { phone_number, category, provider, transaction_id, narrative } = req.body;
+
+    if (!phone_number || !category || !provider || !narrative) {
+      return res.status(400).json({ error: 'Missing mandatory complaint fields.' });
+    }
+
+    // Generate ticket_reference format: BOU-PWA-2026-X[Random]
+    const randomSuffix = Math.floor(100 + Math.random() * 900); // 3 digit number
+    const ticketRef = `BOU-PWA-2026-X${randomSuffix}`;
+
+    const newComplaint = {
+      id: 'pwa-comp-' + Math.random().toString(36).substring(2, 11),
+      ticket_reference: ticketRef,
+      phone_number,
+      category,
+      provider,
+      transaction_id: transaction_id || null,
+      narrative,
+      status: 'ingested',
+      created_at: new Date().toISOString()
+    };
+
+    const saved = await db.createPwaComplaint(newComplaint);
+    console.log(`[PWA Ingestion] Saved complaint reference: ${ticketRef}`);
+
+    return res.status(201).json(saved);
+  } catch (error) {
+    console.error('Error in PWA ingestion endpoint:', error);
+    return res.status(500).json({ error: 'Internal Server Error during PWA ingestion.' });
+  }
+});
+
+// GET /api/v1/complaints/history
+router.get('/complaints/history', async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number parameter is required.' });
+    }
+
+    const complaints = await db.getPwaComplaints(phone);
+    return res.json(complaints);
+  } catch (error) {
+    console.error('Error fetching PWA complaints history:', error);
+    return res.status(500).json({ error: 'Internal Server Error fetching history.' });
+  }
+});
+
+// GET /api/v1/chat/messages
+router.get('/chat/messages', async (req, res) => {
+  try {
+    const { ticket } = req.query;
+    if (!ticket) {
+      return res.status(400).json({ error: 'Ticket reference parameter is required.' });
+    }
+
+    const rawMsgs = await db.getPwaChatMessages(ticket);
+    // Low-bandwidth strip down: only return fields needed
+    const strippedMsgs = rawMsgs.map(m => ({
+      s: m.sender_type === 'citizen' ? 'c' : 'o', // c: citizen, o: operator
+      t: m.message_text,
+      d: m.created_at
+    }));
+
+    return res.json(strippedMsgs);
+  } catch (error) {
+    console.error('Error fetching PWA chat messages:', error);
+    return res.status(500).json({ error: 'Internal Server Error fetching chat messages.' });
+  }
+});
+
+// POST /api/v1/chat/message
+router.post('/chat/message', async (req, res) => {
+  try {
+    const { ticket_reference, sender_type, message_text } = req.body;
+
+    if (!ticket_reference || !sender_type || !message_text) {
+      return res.status(400).json({ error: 'Missing chat message parameters.' });
+    }
+
+    const newMsg = {
+      id: 'chat-' + Math.random().toString(36).substring(2, 11),
+      ticket_reference,
+      sender_type,
+      message_text,
+      created_at: new Date().toISOString()
+    };
+
+    const saved = await db.createPwaChatMessage(newMsg);
+
+    // If sent by citizen, trigger simulated response after 2.5 seconds to make chat interactive
+    if (sender_type === 'citizen') {
+      setTimeout(async () => {
+        try {
+          const complaint = await db.getPwaComplaintByReference(ticket_reference);
+          let responseText = "We are reviewing your request. A compliance officer will update you shortly.";
+          if (complaint) {
+            const providerName = complaint.provider.toUpperCase();
+            if (complaint.category === 'fraud') {
+              responseText = `[Tulinde Guard] ${providerName} Fraud Desk is auditing the reported transaction (${complaint.transaction_id || 'N/A'}). Wallet action is pending.`;
+            } else if (complaint.category === 'overcharge') {
+              responseText = `[Audit Log] Escalating overcharging dispute to ${providerName} customer accounts panel.`;
+            }
+          }
+          await db.createPwaChatMessage({
+            ticket_reference,
+            sender_type: 'operator',
+            message_text: responseText,
+            created_at: new Date().toISOString()
+          });
+          console.log(`[PWA Chat Auto-Responder] Sent reply for ${ticket_reference}`);
+        } catch (autoErr) {
+          console.error('Error in chat auto-responder:', autoErr);
+        }
+      }, 2500);
+    }
+
+    return res.status(201).json(saved);
+  } catch (error) {
+    console.error('Error saving chat message:', error);
+    return res.status(500).json({ error: 'Internal Server Error sending chat message.' });
+  }
+});
+
 module.exports = router;

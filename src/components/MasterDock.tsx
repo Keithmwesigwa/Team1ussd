@@ -1,12 +1,12 @@
 "use client";
 
 import React from 'react';
-import { Shield, Radio, Signal, Sun, Moon } from 'lucide-react';
+import { Shield, Radio, Signal, Smartphone, Sun, Moon } from 'lucide-react';
 
 interface MasterDockProps {
-  currentRole: 'bou' | 'mtn' | 'airtel';
+  currentRole: 'bou' | 'mtn' | 'airtel' | 'citizen';
   theme: 'light' | 'dark';
-  onRoleChange: (role: 'bou' | 'mtn' | 'airtel') => void;
+  onRoleChange: (role: 'bou' | 'mtn' | 'airtel' | 'citizen') => void;
   onThemeToggle: () => void;
 }
 
@@ -19,23 +19,27 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
           {currentRole === 'bou' && <Shield className="w-6 h-6" />}
           {currentRole === 'mtn' && <Radio className="w-6 h-6 text-black" />}
           {currentRole === 'airtel' && <Signal className="w-6 h-6 text-white" />}
+          {currentRole === 'citizen' && <Smartphone className="w-6 h-6 text-white animate-pulse" />}
         </div>
         <div>
-          <span className="text-xs uppercase tracking-widest font-semibold text-text-muted">Compliance Portal</span>
+          <span className="text-xs uppercase tracking-widest font-semibold text-text-muted">
+            {currentRole === 'citizen' ? "Citizen PWA Portal" : "Compliance Portal"}
+          </span>
           <h1 className="text-lg font-bold text-text-main flex items-center gap-2">
             {currentRole === 'bou' && "Bank of Uganda • CPRP Command Center"}
             {currentRole === 'mtn' && "CPRP Institution Console • MTN Uganda"}
             {currentRole === 'airtel' && "CPRP Institution Console • Airtel Uganda"}
+            {currentRole === 'citizen' && "Tulinde • Consumer Protection Portal"}
           </h1>
         </div>
       </div>
 
       {/* Floating Controller Selector */}
-      <div className="flex items-center gap-4 bg-progress-bg p-1.5 rounded-full border border-card-border shadow-inner">
+      <div className="flex items-center gap-3 bg-progress-bg p-1.5 rounded-full border border-card-border shadow-inner">
         {/* BOU Mode Tab */}
         <button
           onClick={() => onRoleChange('bou')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
             currentRole === 'bou'
               ? 'bg-[#800020] text-white shadow-md scale-105'
               : 'text-text-muted hover:text-text-main'
@@ -48,7 +52,7 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
         {/* MTN Mode Tab */}
         <button
           onClick={() => onRoleChange('mtn')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
             currentRole === 'mtn'
               ? 'bg-[#FFCC00] text-black shadow-md scale-105'
               : 'text-text-muted hover:text-text-main'
@@ -61,7 +65,7 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
         {/* Airtel Mode Tab */}
         <button
           onClick={() => onRoleChange('airtel')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
             currentRole === 'airtel'
               ? 'bg-[#E40000] text-white shadow-md scale-105'
               : 'text-text-muted hover:text-text-main'
@@ -69,6 +73,19 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
         >
           <Signal className="w-4 h-4" />
           Airtel Mode
+        </button>
+
+        {/* Citizen Mode Tab */}
+        <button
+          onClick={() => onRoleChange('citizen')}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
+            currentRole === 'citizen'
+              ? 'bg-[#2563EB] text-white shadow-md scale-105'
+              : 'text-text-muted hover:text-text-main'
+          }`}
+        >
+          <Smartphone className="w-4 h-4" />
+          Citizen Portal
         </button>
       </div>
 
