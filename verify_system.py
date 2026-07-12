@@ -105,7 +105,7 @@ def run_tests():
         "sessionId": "session_at_9999",
         "serviceCode": "*254#",
         "phoneNumber": "+256799000000",
-        "text": "1*1"  # Report Fraud -> MTN
+        "text": "1*1*1"  # Report Fraud -> MTN -> Unauthorised transaction
     }
     ussd_res = request_api("/ussd", method="POST", data=ussd_report_payload)
     print(f"USSD Response:\n{ussd_res}")

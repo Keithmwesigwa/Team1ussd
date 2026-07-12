@@ -32,7 +32,6 @@ PORTAL_CREDS = {
 # ─── USSD in-memory session store ─────────────────────────────────────────────
 user_session_store = {}
 
-# ─── Localization matrix ───────────────────────────────────────────────────────
 translation_matrix = {
     'en': {
         'welcome':          "Welcome to BoU Consumer Protection",
@@ -43,6 +42,8 @@ translation_matrix = {
         'select_fraud_type':"Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
         'ivr_redirect':     "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
         'status_redirect':  "Fetching status. You will receive an automated voice update call shortly.",
+        'active_case':      "Active Case ({id}): {status}.\nDetails: {notes}...",
+        'no_case':          "No active complaints found for your phone number ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Invalid selection. Please try again.",
     },
@@ -55,6 +56,8 @@ translation_matrix = {
         'select_fraud_type':"Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
         'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
         'status_redirect':  "Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
+        'active_case':      "Active Case ({id}) - Manya okugenda mu maaso: {status}.\nEbirowoozo: {notes}...",
+        'no_case':          "Active Case: Tewali musango gwonna ogusangiddwa ku ssimu yo ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Okoze ensobi. Kyeyongere okugezaako.",
     },
@@ -67,6 +70,8 @@ translation_matrix = {
         'select_fraud_type':"Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
         'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
         'status_redirect':  "Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
+        'active_case':      "Active Case ({id}) - Manya omusango gwawe: {status}.\nEbirowoozo: {notes}...",
+        'no_case':          "Active Case: Tihariho musango gw'okwiba ogusangirwe ahari esimu yawe ({phone}).",
         'lang_select':      "Toorana Orurimi / Choose Language:",
         'invalid':          "Okora enshobi. Yegarukemu.",
     },
@@ -100,7 +105,7 @@ def login(role):
             if role == 'bou':
                 return redirect(url_for('bou_dashboard'))
             elif role in ('mtn', 'airtel'):
-                provider = 'MTN' if role == 'mtn' else 'Airtel'
+                provider = 'MTN' if role == 'mtn' else 'AIRTEL'
                 return redirect(url_for('provider_dashboard', provider=provider))
         else:
             error = 'Invalid username or password. Please try again.'
@@ -236,7 +241,7 @@ def ussd():
 
         if provider_choice in ('1', '2') and fraud_choice in ('1', '2', '3'):
             provider_name = 'MTN Uganda' if provider_choice == '1' else 'Airtel Uganda'
-            provider_short = 'MTN' if provider_choice == '1' else 'Airtel'
+            provider_short = 'MTN' if provider_choice == '1' else 'AIRTEL'
 
             fraud_types = {
                 'en':  {'1': "Unauthorised transaction",
@@ -258,14 +263,25 @@ def ussd():
             create_complaint(ticket_id, phone_number, provider_short,
                              fraud_label, 0, lang_map[current_lang])
 
-            response = f"END {t['ivr_redirect'].format(provider=provider_name, fraud_type=fraud_label)}"
+            response = f"END {t['ivr_redirect'].format(provider=provider_name, fraud_type=fraud_label)}\nTicket: {ticket_id}."
             trigger_outbound_ivr(phone_number, provider_name, current_lang)
         else:
             response = f"END {t['invalid']}"
 
     # BRANCH 2: TRACK STATUS
     elif text == '2':
-        response = f"END {t['status_redirect']}"
+        # Lookup database for active complaints associated with this phone number
+        all_cases = get_all_complaints()
+        user_cases = [c for c in all_cases if c['phone_number'] == phone_number]
+        
+        if len(user_cases) > 0:
+            # Show status of the most recent complaint
+            latest = user_cases[0]
+            status_clean = latest['status'].replace('_', ' ')
+            response = f"END {t['active_case'].format(id=latest['id'], status=status_clean, notes=latest['notes'][:40])}"
+        else:
+            response = f"END {t['no_case'].format(phone=phone_number)}"
+            
         trigger_status_callback_call(phone_number, current_lang)
 
     # BRANCH 3: LANGUAGE MENU

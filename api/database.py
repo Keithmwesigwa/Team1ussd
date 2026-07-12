@@ -61,7 +61,7 @@ def init_db():
             INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            'FG-1001', '+256701987654', 'Airtel', 'Card/Bank Fraud', 500000.0, 'RESOLVED', 'Luganda',
+            'FG-1001', '+256701987654', 'AIRTEL', 'Card/Bank Fraud', 500000.0, 'RESOLVED', 'Luganda',
             created_2, resolved_2, 'Reversal processed by Airtel Compliance. Funds restored.', deadline_2, 0
         ))
         
@@ -92,7 +92,7 @@ def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, l
     cursor.execute('''
         INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
         VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, 0)
-    ''', (complaint_id, phone_number, provider, fraud_type, float(amount), language, created_at, created_at, notes, sla_deadline))
+    ''', (complaint_id, phone_number, provider.upper(), fraud_type, float(amount), language, created_at, created_at, notes, sla_deadline))
     
     conn.commit()
     conn.close()
@@ -117,7 +117,7 @@ def get_all_complaints():
 def get_provider_complaints(provider):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM complaints WHERE provider = ? ORDER BY created_at DESC", (provider,))
+    cursor.execute("SELECT * FROM complaints WHERE UPPER(provider) = UPPER(?) ORDER BY created_at DESC", (provider,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
@@ -178,9 +178,9 @@ def get_stats():
     mtn_resolved = cursor.fetchone()[0]
     
     # Airtel Stats
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE provider = 'Airtel'")
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'AIRTEL'")
     airtel_total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE provider = 'Airtel' AND status = 'RESOLVED'")
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'AIRTEL' AND status = 'RESOLVED'")
     airtel_resolved = cursor.fetchone()[0]
     
     conn.close()
