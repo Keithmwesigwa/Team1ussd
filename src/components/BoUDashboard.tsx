@@ -259,131 +259,140 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
       </div>
 
       {/* SECTION 3: LIVE FRAUD HEATMAP & GEOSPATIAL ANOMALY AGGREGATOR */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col lg:flex-row rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden mb-6 bg-white h-[600px]">
         
         {/* Left Sidebar: Notification Badges */}
-        <div className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-bold text-text-main">Live Geospatial Alerts</h3>
+        <div className="w-full lg:w-1/3 p-8 bg-white flex flex-col gap-6 border-r border-gray-100 z-10">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3.5 h-3.5 rounded-full bg-[#D35450] shadow-[0_0_10px_rgba(211,84,80,0.4)]" />
+              <h3 className="text-[22px] font-black text-[#1F2937] tracking-tight">Live Fraud Heatmap</h3>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed font-medium">
+              Real-time identification of Mobile Money scam vectors across Ugandan administrative districts. <span className="font-bold text-[#D35450]">9 priority alerts active</span> in the last 60 minutes.
+            </p>
           </div>
           
-          <div className="flex flex-col gap-3 overflow-y-auto max-h-[400px] pr-2">
+          <div className="flex flex-col gap-5 overflow-y-auto pr-2 pb-4 flex-1 custom-scrollbar">
             {geoMetrics.length === 0 ? (
-              <div className="text-xs text-text-muted text-center py-10">Initializing radar link...</div>
+              <div className="text-xs text-gray-400 text-center py-10 font-medium">Initializing radar link...</div>
             ) : (
-              geoMetrics.map((geo) => (
-                <div key={geo.district} className={`p-4 rounded-xl border flex flex-col gap-2 transition-all ${
-                  geo.hazard_state === 'CRITICAL' ? 'bg-[#EF4444]/10 border-[#EF4444]/30' :
-                  geo.hazard_state === 'WARNING' ? 'bg-[#F97316]/10 border-[#F97316]/30' :
-                  'bg-[#14B8A6]/10 border-[#14B8A6]/30'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-text-main flex items-center gap-1.5">
-                      {geo.hazard_state === 'CRITICAL' && (
-                        <span className="relative flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EF4444] opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#EF4444]"></span>
-                        </span>
-                      )}
-                      {geo.district}
-                    </span>
-                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                      geo.hazard_state === 'CRITICAL' ? 'bg-[#EF4444]/20 text-[#EF4444]' :
-                      geo.hazard_state === 'WARNING' ? 'bg-[#F97316]/20 text-[#F97316]' :
-                      'bg-[#14B8A6]/20 text-[#14B8A6]'
-                    }`}>
-                      {geo.hazard_state}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-end text-xs">
-                    <div className="flex flex-col">
-                      <span className="text-text-muted text-[10px]">60-Min Vol</span>
-                      <span className="font-mono font-bold text-text-main">{geo.current_vol}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-text-muted text-[10px]">Baseline (12h)</span>
-                      <span className="font-mono font-bold text-text-main">{geo.baseline_vol}/h</span>
-                    </div>
-                    <div className="flex flex-col text-right">
-                      <span className="text-text-muted text-[10px]">Surge</span>
-                      <span className={`font-mono font-bold ${
-                        Number(geo.surge_percent) > 20 ? 'text-[#EF4444]' :
-                        Number(geo.surge_percent) > 10 ? 'text-[#F97316]' :
-                        'text-[#14B8A6]'
-                      }`}>
-                        +{geo.surge_percent}%
+              geoMetrics.map((geo) => {
+                const isCritical = geo.hazard_state === 'CRITICAL';
+                const isWarning = geo.hazard_state === 'WARNING';
+                const isMonitoring = geo.hazard_state === 'MONITORING';
+                
+                let cardBg = 'bg-white';
+                let borderColor = 'border-gray-100';
+                let titleColor = 'text-gray-700';
+                let badgeBg = 'bg-gray-100';
+                let badgeText = 'text-gray-600';
+                let descColor = 'text-gray-500';
+                
+                if (isCritical) {
+                  cardBg = 'bg-[#FFF9F9]';
+                  borderColor = 'border-[#FFEAEA]';
+                  titleColor = 'text-[#D35450]';
+                  badgeBg = 'bg-[#D35450]';
+                  badgeText = 'text-white';
+                  descColor = 'text-[#D35450]/80';
+                } else if (isWarning) {
+                  cardBg = 'bg-[#FFFAF0]';
+                  borderColor = 'border-[#FFF0D4]';
+                  titleColor = 'text-[#B45309]';
+                  badgeBg = 'bg-[#EAB308]';
+                  badgeText = 'text-white';
+                  descColor = 'text-[#B45309]/80';
+                } else if (isMonitoring) {
+                  cardBg = 'bg-[#F0FDF4]';
+                  borderColor = 'border-[#DCFCE7]';
+                  titleColor = 'text-[#15803D]';
+                  badgeBg = 'bg-[#16A34A]';
+                  badgeText = 'text-white';
+                  descColor = 'text-[#15803D]/80';
+                }
+
+                return (
+                  <div key={geo.district} className={`${cardBg} p-5 rounded-2xl border ${borderColor} shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex flex-col gap-3 transition-transform hover:scale-[1.02] cursor-pointer`}>
+                    <div className="flex justify-between items-start">
+                      <span className={`font-extrabold ${titleColor} text-sm leading-tight tracking-wide uppercase`}>
+                        {geo.district}<br/>DISTRICT
+                      </span>
+                      <span className={`${badgeBg} ${badgeText} text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider`}>
+                        {geo.hazard_state}
                       </span>
                     </div>
+                    <p className={`text-xs ${descColor} font-semibold leading-relaxed mt-1`}>
+                      {isCritical ? `Vector: Phishing / Social Engineering. Escalated by ${geo.surge_percent}% in last 12h.` : 
+                       isWarning ? `Vector: SIM Swap Fraud. Clusters identified near central corridors.` :
+                       `Vector: Fake Promotion SMS. High detection at transit hubs.`}
+                    </p>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Right Canvas: Radar Map Canvas */}
-        <div className="lg:col-span-2 rounded-2xl border border-card-border bg-[#0A0A0C] relative overflow-hidden flex items-center justify-center min-h-[400px]">
-          {/* Conceptual Radar Grid Overlay */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none" 
-            style={{ backgroundImage: 'radial-gradient(#14B8A6 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
-          />
-          <div className="absolute inset-0 flex items-center justify-center opacity-10">
-            <div className="w-[500px] h-[500px] border border-primary rounded-full" />
-            <div className="absolute w-[350px] h-[350px] border border-primary rounded-full" />
-            <div className="absolute w-[200px] h-[200px] border border-primary rounded-full" />
+        <div className="w-full lg:w-2/3 relative bg-[#D4F0D4] overflow-hidden flex items-center justify-center h-full min-h-[400px]">
+          
+          {/* Map Canvas Background - Uganda Silhouette without text */}
+          <div className="absolute inset-0 opacity-50 flex items-center justify-center pointer-events-none">
+            <svg viewBox="0 0 100 100" className="w-[80%] h-[80%]" fill="#BEE3F8" stroke="#90CDF4" strokeWidth="0.5" strokeLinejoin="round">
+               {/* Simplified Uganda Country Outline */}
+               <path d="M45,10 C50,12 55,10 60,15 C65,20 70,25 72,30 C75,35 80,45 85,55 C88,60 85,65 80,70 C75,75 70,85 60,90 C50,95 40,90 30,85 C20,80 15,75 10,65 C5,55 10,45 15,35 C20,25 25,20 30,15 C35,10 40,8 45,10 Z" fill="#C6F6D5" stroke="#9AE6B4" strokeWidth="0.8"/>
+               {/* Internal Abstract District/Region lines */}
+               <path d="M30,15 L40,40 L20,50 L15,35" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               <path d="M40,40 L60,35 L72,30" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               <path d="M60,35 L65,55 L85,55" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               <path d="M40,40 L50,65 L65,55" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               <path d="M20,50 L35,70 L50,65" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               <path d="M35,70 L50,90 L60,90" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
+               {/* Lake Victoria Simulation */}
+               <path d="M65,70 C70,68 75,70 80,70 C85,75 80,85 75,85 C70,85 65,80 65,70 Z" fill="#93C5FD" stroke="none"/>
+               {/* Lake Albert Simulation */}
+               <path d="M12,40 C15,35 20,40 18,48 C15,55 10,50 12,40 Z" fill="#93C5FD" stroke="none"/>
+            </svg>
           </div>
           
-          <div className="relative w-full h-full max-w-[600px] max-h-[500px] flex items-center justify-center">
-            {geoMetrics.map((geo, idx) => {
-              // Abstract mapping logic for visual effect without actual lat/lon paths
-              const positions: Record<string, { top: string, left: string }> = {
-                'Kampala': { top: '50%', left: '55%' },
-                'Wakiso': { top: '45%', left: '50%' },
-                'Masaka': { top: '70%', left: '40%' },
-                'Mbarara': { top: '80%', left: '20%' },
-                'Gulu': { top: '25%', left: '45%' },
-                'Jinja': { top: '55%', left: '65%' },
-              };
-              
-              const pos = positions[geo.district] || { 
-                top: `${30 + (idx * 15 % 50)}%`, 
-                left: `${70 + (idx * 10 % 20)}%` 
-              };
+          {/* Highlight Single Highest Fraud Concentration */}
+          <div className="relative w-full h-full">
+            {geoMetrics.length > 0 && (
+              (() => {
+                // Find highest concentration
+                const topGeo = [...geoMetrics].sort((a, b) => b.current_vol - a.current_vol)[0];
+                
+                const positions: Record<string, { top: string, left: string }> = {
+                  'Kampala': { top: '45%', left: '55%' },
+                  'Wakiso': { top: '50%', left: '48%' },
+                  'Masaka': { top: '75%', left: '35%' },
+                  'Mbarara': { top: '85%', left: '25%' },
+                  'Gulu': { top: '25%', left: '45%' },
+                  'Jinja': { top: '50%', left: '65%' },
+                };
+                
+                const pos = positions[topGeo.district] || { top: '50%', left: '50%' };
+                const glowColor = 'rgba(211,84,80,0.6)';
 
-              const isCritical = geo.hazard_state === 'CRITICAL';
-              const isWarning = geo.hazard_state === 'WARNING';
-              
-              return (
-                <div key={geo.district} className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
-                  style={{ top: pos.top, left: pos.left }}
-                >
-                  <div className="relative flex items-center justify-center">
-                    {isCritical && (
-                      <>
-                        <div className="absolute w-24 h-24 bg-[#EF4444]/10 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
-                        <div className="absolute w-12 h-12 bg-[#EF4444]/20 rounded-full animate-ping" style={{ animationDuration: '1.5s' }} />
-                      </>
-                    )}
-                    {isWarning && (
-                      <div className="absolute w-12 h-12 bg-[#F97316]/20 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
-                    )}
-                    <div className={`w-4 h-4 rounded-full border-2 border-[#0A0A0C] z-10 ${
-                      isCritical ? 'bg-[#EF4444]' :
-                      isWarning ? 'bg-[#F97316]' :
-                      'bg-[#14B8A6]'
-                    }`} />
+                return (
+                  <div className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20"
+                    style={{ top: pos.top, left: pos.left }}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      {/* Massive Pulsing Radar Rings */}
+                      <div className="absolute w-40 h-40 rounded-full animate-ping" style={{ backgroundColor: glowColor, animationDuration: '2.5s' }} />
+                      <div className="absolute w-24 h-24 rounded-full animate-ping" style={{ backgroundColor: glowColor, animationDuration: '1.2s' }} />
+                      
+                      {/* Big Red Halt Button */}
+                      <div className="w-12 h-12 rounded-full border-4 border-white shadow-[0_0_30px_rgba(211,84,80,1)] z-10 flex items-center justify-center bg-[#D35450]">
+                         <div className="w-4 h-4 bg-white" style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)' }} />
+                      </div>
+                    </div>
                   </div>
-                  <span className={`mt-1 text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#0A0A0C]/80 border ${
-                    isCritical ? 'text-[#EF4444] border-[#EF4444]/30' :
-                    isWarning ? 'text-[#F97316] border-[#F97316]/30' :
-                    'text-[#14B8A6] border-[#14B8A6]/30'
-                  }`}>
-                    {geo.district}
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })()
+            )}
           </div>
         </div>
       </div>
