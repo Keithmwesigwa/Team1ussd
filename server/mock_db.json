@@ -1,0 +1,383 @@
+{
+  "subscribers": [
+    {
+      "id": "sub-uuid-1",
+      "phone_number": "+256772123456",
+      "identity_imsi": "IMSI624010123456789",
+      "language_preference": "lg",
+      "primary_wallet_provider": "mtn",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-uuid-2",
+      "phone_number": "+256701987654",
+      "identity_imsi": "IMSI624020987654321",
+      "language_preference": "en",
+      "primary_wallet_provider": "airtel",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-uuid-3",
+      "phone_number": "+256752555666",
+      "identity_imsi": "IMSI624020555666777",
+      "language_preference": "rny",
+      "primary_wallet_provider": "airtel",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-uuid-4",
+      "phone_number": "+256788111222",
+      "identity_imsi": "IMSI624010111222333",
+      "language_preference": "en",
+      "primary_wallet_provider": "mtn",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-uuid-5",
+      "phone_number": "+256777888999",
+      "identity_imsi": "IMSI624010777888999",
+      "language_preference": "lg",
+      "primary_wallet_provider": "mtn",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-m2zg83upe",
+      "phone_number": "+256779998887",
+      "identity_imsi": "IMSI629700039542771",
+      "language_preference": "en",
+      "primary_wallet_provider": "mtn",
+      "wallet_frozen": false
+    },
+    {
+      "id": "sub-7yeuv6ahe",
+      "phone_number": "+256701111222",
+      "identity_imsi": "IMSI429215666015056",
+      "language_preference": "en",
+      "primary_wallet_provider": "airtel",
+      "wallet_frozen": true
+    }
+  ],
+  "complaints": [
+    {
+      "id": "complaint-uuid-1",
+      "ticket_reference": "BOU-2026-004821",
+      "subscriber_id": "sub-uuid-1",
+      "subscriber_phone": "+256772123456",
+      "network_provider": "mtn",
+      "category": "sim_swap",
+      "raw_audio_url": "https://storage.googleapis.com/tulinde-complaints/audio-004821.mp3",
+      "initial_transcript": "Kussa ssente zange ku simu naye nfunye sms nti sim yange ekyusiddwa mu ma-veelo awatali kussa PIN ye y'ekyama yange",
+      "corrected_transcript": "I deposited money on my phone but I received an SMS that my SIM card was swapped under the table without entering my secret PIN.",
+      "status": "escalated",
+      "district": "Kampala",
+      "channel_source": "app",
+      "amount_ugx": 450000,
+      "sla_deadline": "2026-07-12T08:30:32.289Z",
+      "created_at": "2026-07-10T08:30:32.289Z"
+    },
+    {
+      "id": "complaint-uuid-2",
+      "ticket_reference": "BOU-2026-004810",
+      "subscriber_id": "sub-uuid-2",
+      "subscriber_phone": "+256701987654",
+      "network_provider": "airtel",
+      "category": "voice_scam",
+      "raw_audio_url": "https://storage.googleapis.com/tulinde-complaints/audio-004810.mp3",
+      "initial_transcript": "Aba airtel bankubidde essimu nti ntwangudde emmotoka naye bampise kussa PIN ye y'ekyama yange ne batwala ssente zange zonna ku wallet",
+      "corrected_transcript": "Someone from Airtel called saying I won a car, but they coerced me to enter my secret PIN and they took all the money from my wallet.",
+      "status": "under_review",
+      "district": "Gulu",
+      "channel_source": "ivr",
+      "amount_ugx": 780000,
+      "sla_deadline": "2026-07-12T10:12:32.289Z",
+      "created_at": "2026-07-10T10:12:32.289Z"
+    },
+    {
+      "id": "complaint-uuid-3",
+      "ticket_reference": "BOU-2026-004819",
+      "subscriber_id": "sub-uuid-5",
+      "subscriber_phone": "+256777888999",
+      "network_provider": "mtn",
+      "category": "overcharge",
+      "raw_audio_url": "https://storage.googleapis.com/tulinde-complaints/audio-004819.mp3",
+      "initial_transcript": "Nabadde ntuma ssente naye bankubye sente nyingi nnyo ku transaction fee",
+      "corrected_transcript": "I was sending money but they charged me too much transaction fees.",
+      "status": "resolved",
+      "district": "Masaka",
+      "channel_source": "ussd",
+      "amount_ugx": 50000,
+      "sla_deadline": "2026-07-13T20:00:32.289Z",
+      "created_at": "2026-07-11T20:00:32.289Z"
+    },
+    {
+      "id": "complaint-uuid-4",
+      "ticket_reference": "BOU-2026-004818",
+      "subscriber_id": "sub-uuid-3",
+      "subscriber_phone": "+256752555666",
+      "network_provider": "airtel",
+      "category": "sim_swap",
+      "raw_audio_url": "https://storage.googleapis.com/tulinde-complaints/audio-004818.mp3",
+      "initial_transcript": "Simu yange evuddeko service ne banyaga ssente zange ku mobile money ku ssimu endala",
+      "corrected_transcript": "My SIM card lost service and they stole my money on Mobile Money using another phone.",
+      "status": "under_review",
+      "district": "Mbarara",
+      "channel_source": "sms",
+      "amount_ugx": 1200000,
+      "sla_deadline": "2026-07-14T04:12:32.289Z",
+      "created_at": "2026-07-12T04:12:32.289Z"
+    },
+    {
+      "id": "complaint-uuid-5",
+      "ticket_reference": "BOU-2026-004817",
+      "subscriber_id": "sub-uuid-4",
+      "subscriber_phone": "+256788111222",
+      "network_provider": "mtn",
+      "category": "voice_scam",
+      "raw_audio_url": "https://storage.googleapis.com/tulinde-complaints/audio-004817.mp3",
+      "initial_transcript": "Omusajja ampikye kussa ssente ku nnamba endala nti mwana wange ali mu ddwaliro",
+      "corrected_transcript": "A man coerced me to deposit money on another number claiming my child is in the hospital.",
+      "status": "resolved",
+      "district": "Jinja",
+      "channel_source": "pwa",
+      "amount_ugx": 300000,
+      "sla_deadline": "2026-07-13T00:00:32.289Z",
+      "created_at": "2026-07-11T00:00:32.289Z"
+    },
+    {
+      "id": "complaint-foqru1bks",
+      "ticket_reference": "BOU-2026-420100",
+      "subscriber_id": "sub-m2zg83upe",
+      "subscriber_phone": "+256779998887",
+      "network_provider": "mtn",
+      "category": "sim_swap",
+      "raw_audio_url": "http://example.com/recordings/test.mp3",
+      "initial_transcript": "Kussa ssente zange ku simu naye sim yange ekyusiddwa mu ma-veelo",
+      "corrected_transcript": "The subscriber deposited funds onto their account, but subsequently received a notification indicating that their SIM card was swapped without their authorization, bypassing standard security credentials (PIN).",
+      "status": "under_review",
+      "district": "Gulu",
+      "channel_source": "ivr",
+      "amount_ugx": 500000,
+      "sla_deadline": "2026-07-14T06:00:48.613Z",
+      "created_at": "2026-07-12T06:00:48.613Z"
+    },
+    {
+      "id": "complaint-7h8pmb2mn",
+      "ticket_reference": "BOU-2026-337942",
+      "subscriber_id": "sub-7yeuv6ahe",
+      "subscriber_phone": "+256701111222",
+      "network_provider": "airtel",
+      "category": "voice_scam",
+      "raw_audio_url": "",
+      "initial_transcript": "",
+      "corrected_transcript": "",
+      "status": "resolved",
+      "district": "Kampala",
+      "channel_source": "ussd",
+      "amount_ugx": 200000,
+      "sla_deadline": "2026-07-14T06:00:48.634Z",
+      "created_at": "2026-07-12T06:00:48.634Z"
+    },
+    {
+      "id": "complaint-4ggswyowm",
+      "ticket_reference": "BOU-2026-339375",
+      "subscriber_id": "sub-m2zg83upe",
+      "subscriber_phone": "+256779998887",
+      "network_provider": "mtn",
+      "category": "sim_swap",
+      "raw_audio_url": "http://example.com/recordings/test.mp3",
+      "initial_transcript": "Kussa ssente zange ku simu naye sim yange ekyusiddwa mu ma-veelo",
+      "corrected_transcript": "The subscriber deposited funds onto their account, but subsequently received a notification indicating that their SIM card was swapped without their authorization, bypassing standard security credentials (PIN).",
+      "status": "under_review",
+      "district": "Gulu",
+      "channel_source": "ivr",
+      "amount_ugx": 500000,
+      "sla_deadline": "2026-07-14T06:01:29.855Z",
+      "created_at": "2026-07-12T06:01:29.855Z"
+    },
+    {
+      "id": "complaint-dh5ub1xd5",
+      "ticket_reference": "BOU-2026-915836",
+      "subscriber_id": "sub-7yeuv6ahe",
+      "subscriber_phone": "+256701111222",
+      "network_provider": "airtel",
+      "category": "voice_scam",
+      "raw_audio_url": "",
+      "initial_transcript": "",
+      "corrected_transcript": "",
+      "status": "resolved",
+      "district": "Kampala",
+      "channel_source": "ussd",
+      "amount_ugx": 200000,
+      "sla_deadline": "2026-07-14T06:01:29.873Z",
+      "created_at": "2026-07-12T06:01:29.873Z"
+    },
+    {
+      "id": "complaint-kuk025boj",
+      "ticket_reference": "BOU-2026-335681",
+      "subscriber_id": "sub-m2zg83upe",
+      "subscriber_phone": "+256779998887",
+      "network_provider": "mtn",
+      "category": "sim_swap",
+      "raw_audio_url": "http://example.com/recordings/test.mp3",
+      "initial_transcript": "Kussa ssente zange ku simu naye sim yange ekyusiddwa mu ma-veelo",
+      "corrected_transcript": "The subscriber deposited funds onto their account, but subsequently received a notification indicating that their SIM card was swapped without their authorization, bypassing standard security credentials (PIN).",
+      "status": "under_review",
+      "district": "Gulu",
+      "channel_source": "ivr",
+      "amount_ugx": 500000,
+      "sla_deadline": "2026-07-14T06:03:08.723Z",
+      "created_at": "2026-07-12T06:03:08.723Z"
+    },
+    {
+      "id": "complaint-1vod2hbxq",
+      "ticket_reference": "BOU-2026-216638",
+      "subscriber_id": "sub-7yeuv6ahe",
+      "subscriber_phone": "+256701111222",
+      "network_provider": "airtel",
+      "category": "voice_scam",
+      "raw_audio_url": "",
+      "initial_transcript": "",
+      "corrected_transcript": "",
+      "status": "resolved",
+      "district": "Kampala",
+      "channel_source": "ussd",
+      "amount_ugx": 200000,
+      "sla_deadline": "2026-07-14T06:03:08.744Z",
+      "created_at": "2026-07-12T06:03:08.744Z"
+    },
+    {
+      "id": "complaint-qoekr931f",
+      "ticket_reference": "BOU-2026-187162",
+      "subscriber_id": "sub-m2zg83upe",
+      "subscriber_phone": "+256779998887",
+      "network_provider": "mtn",
+      "category": "sim_swap",
+      "raw_audio_url": "http://example.com/recordings/test.mp3",
+      "initial_transcript": "Kussa ssente zange ku simu naye sim yange ekyusiddwa mu ma-veelo",
+      "corrected_transcript": "The subscriber deposited funds onto their account, but subsequently received a notification indicating that their SIM card was swapped without their authorization, bypassing standard security credentials (PIN).",
+      "status": "under_review",
+      "district": "Gulu",
+      "channel_source": "ivr",
+      "amount_ugx": 500000,
+      "sla_deadline": "2026-07-14T06:03:47.531Z",
+      "created_at": "2026-07-12T06:03:47.531Z"
+    },
+    {
+      "id": "complaint-0je2lmare",
+      "ticket_reference": "BOU-2026-966448",
+      "subscriber_id": "sub-7yeuv6ahe",
+      "subscriber_phone": "+256701111222",
+      "network_provider": "airtel",
+      "category": "voice_scam",
+      "raw_audio_url": "",
+      "initial_transcript": "",
+      "corrected_transcript": "",
+      "status": "resolved",
+      "district": "Kampala",
+      "channel_source": "ussd",
+      "amount_ugx": 200000,
+      "sla_deadline": "2026-07-14T06:03:47.550Z",
+      "created_at": "2026-07-12T06:03:47.550Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log-uuid-1",
+      "complaint_id": "complaint-uuid-3",
+      "action_taken": "resolve_dispute",
+      "operator_identity": "mtn_agent_99",
+      "timestamp": "2026-07-11T21:00:32.289Z"
+    },
+    {
+      "id": "log-uuid-2",
+      "complaint_id": "complaint-uuid-5",
+      "action_taken": "resolve_dispute",
+      "operator_identity": "mtn_agent_45",
+      "timestamp": "2026-07-11T02:00:32.289Z"
+    },
+    {
+      "id": "log-ioeoo0ira",
+      "complaint_id": "complaint-7h8pmb2mn",
+      "action_taken": "wallet_freeze targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:00:48.649Z"
+    },
+    {
+      "id": "log-0bm1iins2",
+      "complaint_id": "complaint-7h8pmb2mn",
+      "action_taken": "flash_sms_intercept targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:00:48.657Z"
+    },
+    {
+      "id": "log-kq7k68wzx",
+      "complaint_id": "complaint-7h8pmb2mn",
+      "action_taken": "resolve_dispute (escalation halted)",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:00:48.666Z"
+    },
+    {
+      "id": "log-na3zwkx3y",
+      "complaint_id": "complaint-dh5ub1xd5",
+      "action_taken": "wallet_freeze targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:01:29.890Z"
+    },
+    {
+      "id": "log-g6y30mdlm",
+      "complaint_id": "complaint-dh5ub1xd5",
+      "action_taken": "flash_sms_intercept targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:01:29.898Z"
+    },
+    {
+      "id": "log-37o6fidyb",
+      "complaint_id": "complaint-dh5ub1xd5",
+      "action_taken": "resolve_dispute (escalation halted)",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:01:29.909Z"
+    },
+    {
+      "id": "log-wevqtlh3m",
+      "complaint_id": "complaint-1vod2hbxq",
+      "action_taken": "wallet_freeze targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:08.764Z"
+    },
+    {
+      "id": "log-k0phrbguo",
+      "complaint_id": "complaint-1vod2hbxq",
+      "action_taken": "flash_sms_intercept targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:08.775Z"
+    },
+    {
+      "id": "log-4x0dll8wz",
+      "complaint_id": "complaint-1vod2hbxq",
+      "action_taken": "resolve_dispute (escalation halted)",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:08.787Z"
+    },
+    {
+      "id": "log-xcesw776r",
+      "complaint_id": "complaint-0je2lmare",
+      "action_taken": "wallet_freeze targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:47.572Z"
+    },
+    {
+      "id": "log-ibj0xphuf",
+      "complaint_id": "complaint-0je2lmare",
+      "action_taken": "flash_sms_intercept targeting +256701111222",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:47.584Z"
+    },
+    {
+      "id": "log-8r5hj3n6b",
+      "complaint_id": "complaint-0je2lmare",
+      "action_taken": "resolve_dispute (escalation halted)",
+      "operator_identity": "airtel_agent_valid",
+      "timestamp": "2026-07-12T06:03:47.595Z"
+    }
+  ]
+}

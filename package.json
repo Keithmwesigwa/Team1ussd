@@ -1,0 +1,35 @@
+{
+  "name": "bou-compliance-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"next dev\" \"nodemon server/server.js\"",
+    "dev:next": "next dev",
+    "dev:server": "nodemon server/server.js",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test:api": "node server/test_api.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "lucide-react": "^0.468.0",
+    "next": "16.2.10",
+    "pg": "^8.12.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "nodemon": "^3.1.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
