@@ -22,13 +22,13 @@
             --accent-theme-hover: #ca8a04;
             --logo-bg: #1e1b4b;
             --logo-fg: #facc15;
-            --role-name: "MTN Uganda Compliance Desk";
+            --role-name: "Telecom X Compliance Desk";
             {% elif role == 'airtel' %}
             --accent-theme: #dc2626; /* Airtel Red */
             --accent-theme-hover: #b91c1c;
             --logo-bg: #dc2626;
             --logo-fg: #ffffff;
-            --role-name: "Airtel Uganda Compliance Desk";
+            --role-name: "Telecom Y Compliance Desk";
             {% else %}
             --accent-theme: #d97706; /* BoU Gold */
             --accent-theme-hover: #b45309;
@@ -242,7 +242,7 @@
         </div>
         {% endif %}
 
-        <form action="/login/{{ role }}" method="POST">
+        <form action="{{ login_action }}" method="POST">
             <div class="form-group">
                 <label class="form-label">Username</label>
                 <input type="text" class="form-input" name="username" placeholder="Enter username..." autocomplete="off" required>
@@ -262,11 +262,11 @@
         <div class="credential-helper">
             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Authorized Demo Credentials:</div>
             {% if role == 'mtn' %}
-            Username: <strong>mtn_compliance</strong><br>
-            Password: <strong>mtn123</strong>
+            Username: <strong>telecomx_compliance</strong><br>
+            Password: <strong>telecomx</strong>
             {% elif role == 'airtel' %}
-            Username: <strong>airtel_compliance</strong><br>
-            Password: <strong>airtel123</strong>
+            Username: <strong>telecomy_compliance</strong><br>
+            Password: <strong>telecomy</strong>
             {% else %}
             Username: <strong>bou_supervisor</strong><br>
             Password: <strong>bou123</strong>
@@ -283,8 +283,8 @@
     <script>
         // Update subtitle name
         const roleNames = {
-            "mtn": "MTN Uganda Compliance Desk",
-            "airtel": "Airtel Uganda Compliance Desk",
+            "mtn": "Telecom X Compliance Desk",
+            "airtel": "Telecom Y Compliance Desk",
             "bou": "Bank of Uganda Supervisory Board"
         };
         document.getElementById('role-subtitle').textContent = roleNames["{{ role }}"] || "Portal Access";

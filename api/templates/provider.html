@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ provider_name }} Compliance Desk - FraudGuard</title>
-    <meta name="description" content="{{ provider_name }} Uganda compliance officer portal for managing and resolving mobile money fraud disputes.">
+    <title>{{ provider_display_name }} Compliance Desk - FraudGuard</title>
+    <meta name="description" content="{{ provider_display_name }} compliance officer portal for managing and resolving mobile money fraud disputes.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
             --bg-muted: #f8fafc;
             --border:   #e2e8f0;
 
-            {% if provider_name == 'MTN' %}
+            {% if provider_key == 'mtn' %}
             --accent:    #ca8a04;
             --accent-h:  #a16207;
             --accent-bg: #fef9c3;
@@ -176,7 +176,7 @@
         .fs:focus, .fta:focus { border-color:var(--accent); }
         .modal-actions { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; }
         .btn-cancel { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.65rem 1.25rem; border-radius:9px; font-weight:700; cursor:pointer; font-size:.85rem; }
-        .btn-save   { background:var(--accent); color:{% if provider_name == 'MTN' %}#000{% else %}#fff{% endif %}; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:800; cursor:pointer; font-size:.85rem; transition:all .18s; }
+        .btn-save   { background:var(--accent); color:{% if provider_key == 'mtn' %}#000{% else %}#fff{% endif %}; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:800; cursor:pointer; font-size:.85rem; transition:all .18s; }
         .btn-save:hover { background:var(--accent-h); }
 
         /* EMPTY STATE */
@@ -186,14 +186,14 @@
 <body>
     <header>
         <div class="logo-row">
-            <div class="logo-sq-text">{{ provider_name[0] }}</div>
+            <div class="logo-sq-text">{{ provider_display_name[0] }}</div>
             <div>
-                <div class="logo-name">{{ provider_name }} Uganda</div>
+                <div class="logo-name">{{ provider_display_name }}</div>
                 <div class="logo-sub">Compliance & Dispute Resolution Desk</div>
             </div>
         </div>
         <div class="header-right">
-            <div class="role-chip">{{ provider_name }} Officer</div>
+            <div class="role-chip">{{ provider_display_name }} Officer</div>
             <a href="/logout" class="logout-btn">
                 <i data-lucide="log-out" style="width:14px;height:14px;"></i> Logout
             </a>
@@ -309,7 +309,7 @@
     <script>
         lucide.createIcons();
 
-        const PROVIDER = '{{ provider_name }}';
+        const PROVIDER = '{{ provider_api_key }}';
         let allCases = [];
         let activeFilter = 'ALL';
         let activeCaseId = null;

@@ -8,6 +8,10 @@ from flask import (Flask, request, render_template, make_response,
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
 app = Flask(__name__, template_folder=template_dir)
 app.secret_key = os.environ.get('SECRET_KEY', 'fraudguard-bou-2026-dev-secret')
+AFRICASTALKING_SIMULATOR_URL = os.environ.get(
+    'AFRICASTALKING_SIMULATOR_URL',
+    'https://account.africastalking.com/apps/sandbox/ussd/simulator'
+)
 
 # Support running as `python api/index.py` (local) or as Vercel serverless (api/)
 try:
@@ -26,9 +30,20 @@ init_db()
 
 # ─── Portal credentials (must match hints shown in login.html) ────────────────
 PORTAL_CREDS = {
-    'mtn':    {'username': 'mtn_compliance',   'password': 'mtn123'},
-    'airtel': {'username': 'airtel_compliance', 'password': 'airtel123'},
+    'mtn':    {'username': 'telecomx_compliance', 'password': 'telecomx'},
+    'airtel': {'username': 'telecomy_compliance', 'password': 'telecomy'},
     'bou':    {'username': 'bou_supervisor',    'password': 'bou123'},
+}
+
+ROLE_DISPLAY_NAMES = {
+    'mtn': 'Telecom X',
+    'airtel': 'Telecom Y',
+    'bou': 'Bank of Uganda',
+}
+
+PROVIDER_ROUTE_MAP = {
+    'mtn': {'slug': 'telecomx', 'code': 'MTN', 'display_name': 'Telecom X'},
+    'airtel': {'slug': 'telecomy', 'code': 'AIRTEL', 'display_name': 'Telecom Y'},
 }
 
 # ─── USSD in-memory session store ─────────────────────────────────────────────
@@ -111,13 +126,16 @@ def detect_provider(phone_number):
 
 @app.route('/')
 def home():
+    return render_template('landing.html', simulator_url=AFRICASTALKING_SIMULATOR_URL)
+
+
+@app.route('/simulator')
+def simulator():
     return render_template('index.html')
 
 # ── Login ──────────────────────────────────────────────────────────────────────
-@app.route('/login/<role>', methods=['GET', 'POST'])
-def login(role):
-    if role not in PORTAL_CREDS:
-        return redirect(url_for('home'))
+def render_login_page(role, login_action):
+    role_display_name = ROLE_DISPLAY_NAMES.get(role, role.upper())
 
     error = None
     if request.method == 'POST':
@@ -133,12 +151,29 @@ def login(role):
             if role == 'bou':
                 return redirect(url_for('bou_dashboard'))
             elif role in ('mtn', 'airtel'):
-                provider = 'MTN' if role == 'mtn' else 'AIRTEL'
-                return redirect(url_for('provider_dashboard', provider=provider))
+                provider_route = PROVIDER_ROUTE_MAP[role]['slug']
+                return redirect(url_for('provider_dashboard', provider=provider_route))
         else:
             error = 'Invalid username or password. Please try again.'
 
-    return render_template('login.html', role=role, error=error)
+    return render_template('login.html', role=role, role_display_name=role_display_name, login_action=login_action, error=error)
+
+
+@app.route('/login/<role>', methods=['GET', 'POST'])
+def login(role):
+    if role not in PORTAL_CREDS:
+        return redirect(url_for('home'))
+    return render_login_page(role, request.path)
+
+
+@app.route('/telecomx', methods=['GET', 'POST'])
+def telecomx_login():
+    return render_login_page('mtn', request.path)
+
+
+@app.route('/telecomy', methods=['GET', 'POST'])
+def telecomy_login():
+    return render_login_page('airtel', request.path)
 
 # ── Logout ─────────────────────────────────────────────────────────────────────
 @app.route('/logout')
@@ -151,13 +186,40 @@ def logout():
 def user_portal():
     return render_template('user.html')
 
-# ── Provider (MTN / Airtel) Dashboard ─────────────────────────────────────────
+# ── Provider (Telecom X / Telecom Y) Dashboard ───────────────────────────────
 @app.route('/provider/<provider>')
 def provider_dashboard(provider):
+    provider_key = None
+    if provider.lower() in ('telecomx', 'mtn'):
+        provider_key = 'mtn'
+    elif provider.lower() in ('telecomy', 'airtel'):
+        provider_key = 'airtel'
+
+    if provider_key is None:
+        return redirect(url_for('home'))
+
     if session.get('role') not in ('mtn', 'airtel'):
-        role = 'mtn' if provider.upper() == 'MTN' else 'airtel'
-        return redirect(url_for('login', role=role))
-    return render_template('provider.html', provider_name=provider.upper())
+        return redirect(url_for('login', role=provider_key))
+
+    provider_meta = PROVIDER_ROUTE_MAP[provider_key]
+    return render_template(
+        'provider.html',
+        provider_name=provider_meta['code'],
+        provider_display_name=provider_meta['display_name'],
+        provider_key=provider_key,
+        provider_slug=provider_meta['slug'],
+        provider_api_key=provider_meta['code'],
+    )
+
+
+@app.route('/telecomx')
+def telecomx_provider_route():
+    return redirect(url_for('provider_dashboard', provider='telecomx'))
+
+
+@app.route('/telecomy')
+def telecomy_provider_route():
+    return redirect(url_for('provider_dashboard', provider='telecomy'))
 
 # ── Bank of Uganda Dashboard ───────────────────────────────────────────────────
 @app.route('/bou')
@@ -265,6 +327,39 @@ def ussd():
     t            = translation_matrix[current_lang]
     input_chain  = text.split('*')
     response     = ""
+
+    # Support compact USSD submissions used by automated checks.
+    if len(input_chain) >= 3 and input_chain[0] == '1' and input_chain[1] in ('1', '2') and input_chain[2] in ('1', '2', '3', '4'):
+        provider_map = {
+            '1': ('MTN Uganda', 'MTN'),
+            '2': ('Airtel Uganda', 'AIRTEL'),
+        }
+        fraud_map = {
+            '1': 'Unauthorized Transaction',
+            '2': 'Scammer Impersonation',
+            '3': 'Agent/Merchant Overcharge',
+            '4': 'Other',
+        }
+        provider_name, provider_short = provider_map[input_chain[1]]
+        fraud_type = fraud_map[input_chain[2]]
+        ticket_id = f"FG-{''.join(random.choices(string.digits, k=4))}"
+
+        create_complaint(
+            ticket_id,
+            phone_number,
+            provider_short,
+            fraud_type,
+            0,
+            'English'
+        )
+
+        state['report_flow'] = None
+        state['report'] = {}
+        response = f"END Thank you. Ticket: {ticket_id}. Your complaint for {provider_name} has been logged."
+
+        resp = make_response(response)
+        resp.headers['Content-Type'] = 'text/plain'
+        return resp
 
     # SCREEN 0: MAIN MENU
     if text == '':
