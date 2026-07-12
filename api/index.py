@@ -1,229 +1,330 @@
 import os
-from flask import Flask, request, render_template, make_response
+import random
+import string
+from flask import (Flask, request, render_template, make_response,
+                   redirect, url_for, session, jsonify)
 
-# Define explicit template directory relative to this script for Vercel Serverless Functions
+# ─── App setup ───────────────────────────────────────────────────────────────
 template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
 app = Flask(__name__, template_folder=template_dir)
+app.secret_key = os.environ.get('SECRET_KEY', 'fraudguard-bou-2026-dev-secret')
 
-# ==========================================
-# 🗂️ IN-MEMORY SESSION STORE
-# Tracks per-phone user preferences (e.g. language) for the MVP lifecycle.
-# Replace with a persistent DB (Redis / SQLite) for production.
-# ==========================================
+# Support running as `python api/index.py` (local) or as Vercel serverless (api/)
+try:
+    from api.database import (init_db, create_complaint, get_complaint,
+                              get_all_complaints, get_provider_complaints,
+                              update_status, escalate_complaint, get_stats)
+except ImportError:
+    from database import (init_db, create_complaint, get_complaint,
+                          get_all_complaints, get_provider_complaints,
+                          update_status, escalate_complaint, get_stats)
+
+# Initialise DB + seed sample rows on cold start
+init_db()
+
+# ─── Portal credentials (MVP hardcoded – replace with DB auth in prod) ────────
+PORTAL_CREDS = {
+    'mtn':    {'username': 'mtn_admin',    'password': 'mtn2026'},
+    'airtel': {'username': 'airtel_admin', 'password': 'airtel2026'},
+    'bou':    {'username': 'bou_admin',    'password': 'bou2026'},
+}
+
+# ─── USSD in-memory session store ─────────────────────────────────────────────
 user_session_store = {}
 
-# ==========================================
-# 🗺️ LOCALIZATION DICTIONARY MATRIX (Ugandan Dialects)
-# ==========================================
+# ─── Localization matrix ───────────────────────────────────────────────────────
 translation_matrix = {
     'en': {
-        'welcome':        "Welcome to BoU Consumer Protection",
-        'opt1':           "1. Report Mobile Money Fraud",
-        'opt2':           "2. Track Active Complaint",
-        'opt3':           "3. Change Language / Ennimi",
-        'select_provider':"Select Affected Provider:",
-        'select_fraud_type': "Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
-        'ivr_redirect':   "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
-        'status_redirect':"Fetching status. You will receive an automated voice update call shortly.",
-        'lang_select':    "Londa Ennimi / Choose Language:",
-        'invalid':        "Invalid selection. Please try again.",
+        'welcome':          "Welcome to BoU Consumer Protection",
+        'opt1':             "1. Report Mobile Money Fraud",
+        'opt2':             "2. Track Active Complaint",
+        'opt3':             "3. Change Language / Ennimi",
+        'select_provider':  "Select Affected Provider:",
+        'select_fraud_type':"Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
+        'ivr_redirect':     "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
+        'status_redirect':  "Fetching status. You will receive an automated voice update call shortly.",
+        'lang_select':      "Londa Ennimi / Choose Language:",
+        'invalid':          "Invalid selection. Please try again.",
     },
     'lg': {
-        'welcome':        "Tusanyuse okulaba",
-        'opt1':           "1. Loopa obufere",
-        'opt2':           "2. Manya okugenda mu maaso kw'omusango",
-        'opt3':           "3. Kyusa olulimi / Change Language",
-        'select_provider':"Londa kampuni y'essimu ekozesseddwa:",
-        'select_fraud_type': "Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
-        'ivr_redirect':   "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
-        'status_redirect':"Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
-        'lang_select':    "Londa Ennimi / Choose Language:",
-        'invalid':        "Okoze ensobi. Kyeyongere okugezaako.",
+        'welcome':          "Tusanyuse okulaba",
+        'opt1':             "1. Loopa obufere",
+        'opt2':             "2. Manya okugenda mu maaso kw'omusango",
+        'opt3':             "3. Kyusa olulimi / Change Language",
+        'select_provider':  "Londa kampuni y'essimu ekozesseddwa:",
+        'select_fraud_type':"Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
+        'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
+        'status_redirect':  "Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
+        'lang_select':      "Londa Ennimi / Choose Language:",
+        'invalid':          "Okoze ensobi. Kyeyongere okugezaako.",
     },
     'rny': {
-        'welcome':        "Nyamwanga ha weebura ya BoU y'okurinda abaguzi",
-        'opt1':           "1. Handiika okwiba kw'esente z'omumasingo",
-        'opt2':           "2. Mazima omusango gwawe oku guri",
-        'opt3':           "3. Hindura Orurimi / Change Language",
-        'select_provider':"Toorana kampuni y'esimu eyafiiswaho:",
-        'select_fraud_type': "Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
-        'ivr_redirect':   "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
-        'status_redirect':"Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
-        'lang_select':    "Toorana Orurimi / Choose Language:",
-        'invalid':        "Okora enshobi. Yegarukemu.",
+        'welcome':          "Nyamwanga ha weebura ya BoU y'okurinda abaguzi",
+        'opt1':             "1. Handiika okwiba kw'esente z'omumasingo",
+        'opt2':             "2. Mazima omusango gwawe oku guri",
+        'opt3':             "3. Hindura Orurimi / Change Language",
+        'select_provider':  "Toorana kampuni y'esimu eyafiiswaho:",
+        'select_fraud_type':"Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
+        'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
+        'status_redirect':  "Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
+        'lang_select':      "Toorana Orurimi / Choose Language:",
+        'invalid':          "Okora enshobi. Yegarukemu.",
     },
 }
 
-# ==========================================
-# 🏠 HOME: Simulator UI
-# ==========================================
+# ═══════════════════════════════════════════════════════════════════════════════
+# PORTAL ROUTES
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# ==========================================
-# ⚡ 1. USSD ENDPOINT (Route: /ussd)
-# ==========================================
+# ── Login ──────────────────────────────────────────────────────────────────────
+@app.route('/login/<role>', methods=['GET', 'POST'])
+def login(role):
+    if role not in PORTAL_CREDS:
+        return redirect(url_for('home'))
+
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        creds    = PORTAL_CREDS[role]
+
+        if username == creds['username'] and password == creds['password']:
+            session['role']    = role
+            session['user']    = username
+            session.permanent  = True
+
+            if role == 'bou':
+                return redirect(url_for('bou_dashboard'))
+            elif role in ('mtn', 'airtel'):
+                provider = 'MTN' if role == 'mtn' else 'Airtel'
+                return redirect(url_for('provider_dashboard', provider=provider))
+        else:
+            error = 'Invalid username or password. Please try again.'
+
+    return render_template('login.html', role=role, error=error)
+
+# ── Logout ─────────────────────────────────────────────────────────────────────
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
+# ── End-User Portal ────────────────────────────────────────────────────────────
+@app.route('/user')
+def user_portal():
+    return render_template('user.html')
+
+# ── Provider (MTN / Airtel) Dashboard ─────────────────────────────────────────
+@app.route('/provider/<provider>')
+def provider_dashboard(provider):
+    if session.get('role') not in ('mtn', 'airtel'):
+        role = 'mtn' if provider.upper() == 'MTN' else 'airtel'
+        return redirect(url_for('login', role=role))
+    return render_template('provider.html', provider=provider.upper())
+
+# ── Bank of Uganda Dashboard ───────────────────────────────────────────────────
+@app.route('/bou')
+def bou_dashboard():
+    if session.get('role') != 'bou':
+        return redirect(url_for('login', role='bou'))
+    return render_template('bou.html')
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# JSON API ROUTES  (consumed by dashboard JS via fetch())
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/stats')
+def api_stats():
+    return jsonify(get_stats())
+
+@app.route('/api/complaints', methods=['GET'])
+def api_complaints():
+    return jsonify(get_all_complaints())
+
+@app.route('/api/complaints', methods=['POST'])
+def api_create_complaint():
+    data        = request.values
+    phone       = data.get('phone_number', '')
+    provider    = data.get('provider', '')
+    fraud_type  = data.get('fraud_type', '')
+    amount      = data.get('amount', 0)
+    language    = data.get('language', 'English')
+    notes_text  = data.get('notes', '')
+
+    # Generate unique ticket ID
+    suffix = ''.join(random.choices(string.digits, k=4))
+    ticket_id = f"FG-{suffix}"
+
+    create_complaint(ticket_id, phone, provider, fraud_type, amount, language)
+
+    # Append extra notes if provided
+    if notes_text:
+        update_status(ticket_id, 'PENDING', notes_text)
+
+    return jsonify(get_complaint(ticket_id))
+
+@app.route('/api/complaints/<complaint_id>', methods=['GET'])
+def api_get_complaint(complaint_id):
+    c = get_complaint(complaint_id)
+    if not c:
+        return jsonify({'error': 'Complaint not found'}), 404
+    return jsonify(c)
+
+@app.route('/api/complaints/<complaint_id>/status', methods=['POST'])
+def api_update_status(complaint_id):
+    data   = request.values
+    status = data.get('status', 'PENDING')
+    notes  = data.get('notes', '')
+    update_status(complaint_id, status, notes)
+    return jsonify({'ok': True, 'id': complaint_id, 'status': status})
+
+@app.route('/api/complaints/<complaint_id>/escalate', methods=['POST'])
+def api_escalate(complaint_id):
+    escalate_complaint(complaint_id)
+    update_status(complaint_id, 'ESCALATED', 'Case escalated to BoU enforcement desk.')
+    return jsonify({'ok': True, 'id': complaint_id})
+
+@app.route('/api/provider/<provider>/complaints')
+def api_provider_complaints(provider):
+    return jsonify(get_provider_complaints(provider))
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# USSD ENDPOINT
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.route("/ussd", methods=['POST'])
 def ussd():
-    # Read the standard Africa's Talking POST payload
     session_id   = request.values.get("sessionId", None)
     service_code = request.values.get("serviceCode", None)
     phone_number = request.values.get("phoneNumber", "")
     text         = request.values.get("text", "")
 
-    # Initialize session tracking if phone number is not yet cached
     if phone_number not in user_session_store:
-        user_session_store[phone_number] = {'lang': 'en'}  # Default: English
+        user_session_store[phone_number] = {'lang': 'en'}
 
     current_lang = user_session_store[phone_number]['lang']
     t            = translation_matrix[current_lang]
     input_chain  = text.split('*')
     response     = ""
 
-    # ---- SCREEN 0: MAIN MENU ----
+    # SCREEN 0: MAIN MENU
     if text == '':
         response = (f"CON {t['welcome']}\n"
                     f"{t['opt1']}\n"
                     f"{t['opt2']}\n"
                     f"{t['opt3']}")
 
-    # ---- BRANCH 1: REPORT FRAUD ----
+    # BRANCH 1: REPORT FRAUD – provider selection
     elif text == '1':
         response = (f"CON {t['select_provider']}\n"
                     "1. MTN Uganda\n"
                     "2. Airtel Uganda")
 
-    elif text == '1*1' or text == '1*2':
+    # BRANCH 1*1 / 1*2: fraud type selection
+    elif text in ('1*1', '1*2'):
         provider = 'MTN Uganda' if text == '1*1' else 'Airtel Uganda'
         response = f"CON {t['select_fraud_type'].format(provider=provider)}"
 
+    # BRANCH 1*[provider]*[fraud]: file complaint
     elif input_chain[0] == '1' and len(input_chain) == 3:
         provider_choice = input_chain[1]
-        fraud_choice = input_chain[2]
-        
-        if provider_choice in ['1', '2'] and fraud_choice in ['1', '2', '3']:
+        fraud_choice    = input_chain[2]
+
+        if provider_choice in ('1', '2') and fraud_choice in ('1', '2', '3'):
             provider_name = 'MTN Uganda' if provider_choice == '1' else 'Airtel Uganda'
-            
-            # Map fraud types dynamically based on language choice for final response
+            provider_short = 'MTN' if provider_choice == '1' else 'Airtel'
+
             fraud_types = {
-                'en': {
-                    '1': "Unauthorised transaction",
-                    '2': "Scammers pretending to be staff",
-                    '3': "Scammers pretending to have sent money"
-                },
-                'lg': {
-                    '1': "Ssente ezitakkiriziddwa",
-                    '2': "Abafere abeeyita abakozi",
-                    '3': "Abafere abeeyita abakusindikidde ssente"
-                },
-                'rny': {
-                    '1': "Okwiha esente omu buryo butahikire",
-                    '2': "Abashuma abeetwarra nka bakozi",
-                    '3': "Abashuma abeetwarra ngu bakusindikira esente"
-                }
+                'en':  {'1': "Unauthorised transaction",
+                        '2': "Scammers pretending to be staff",
+                        '3': "Scammers pretending to have sent money"},
+                'lg':  {'1': "Ssente ezitakkiriziddwa",
+                        '2': "Abafere abeeyita abakozi",
+                        '3': "Abafere abeeyita abakusindikidde ssente"},
+                'rny': {'1': "Okwiha esente omu buryo butahikire",
+                        '2': "Abashuma abeetwarra nka bakozi",
+                        '3': "Abashuma abeetwarra ngu bakusindikira esente"},
             }
-            
+            lang_map = {'en': 'English', 'lg': 'Luganda', 'rny': 'Runyakitara'}
             fraud_label = fraud_types[current_lang][fraud_choice]
+
+            # Save complaint to DB
+            suffix    = ''.join(random.choices(string.digits, k=4))
+            ticket_id = f"FG-{suffix}"
+            create_complaint(ticket_id, phone_number, provider_short,
+                             fraud_label, 0, lang_map[current_lang])
+
             response = f"END {t['ivr_redirect'].format(provider=provider_name, fraud_type=fraud_label)}"
-            
-            # Asynchronously trigger outbound IVR call via microservice hook
             trigger_outbound_ivr(phone_number, provider_name, current_lang)
         else:
             response = f"END {t['invalid']}"
 
-    # ---- BRANCH 2: TRACK STATUS ----
+    # BRANCH 2: TRACK STATUS
     elif text == '2':
         response = f"END {t['status_redirect']}"
         trigger_status_callback_call(phone_number, current_lang)
 
-    # ---- BRANCH 3: LANGUAGE SUB-MENU ----
+    # BRANCH 3: LANGUAGE MENU
     elif text == '3':
         response = (f"CON {t['lang_select']}\n"
                     "1. English\n"
                     "2. Luganda\n"
                     "3. Runyakitara")
 
-    # ---- PROCESS LANGUAGE UPDATE (e.g. 3*1, 3*2, 3*3) ----
+    # BRANCH 3*[1|2|3]: set language
     elif input_chain[0] == '3' and len(input_chain) == 2:
         choice = input_chain[1]
-        if choice == '1':
-            user_session_store[phone_number]['lang'] = 'en'
-        elif choice == '2':
-            user_session_store[phone_number]['lang'] = 'lg'
-        elif choice == '3':
-            user_session_store[phone_number]['lang'] = 'rny'
-
-        new_lang = user_session_store[phone_number]['lang']
-        new_t    = translation_matrix[new_lang]
+        lang   = {'1': 'en', '2': 'lg', '3': 'rny'}.get(choice, 'en')
+        user_session_store[phone_number]['lang'] = lang
+        new_t    = translation_matrix[lang]
         response = f"END {new_t['welcome']}."
 
-    # ---- FALLBACK ----
     else:
         response = f"END {t['invalid']}"
 
-    # Respond to MNO gateway with raw plain text (required by Africa's Talking)
     resp = make_response(response)
     resp.headers['Content-Type'] = 'text/plain'
     return resp
 
-# ==========================================
-# 📞 2. IVR VOICE OUTBOUND WEBHOOK (Route: /voice-outbound)
-# Called by Africa's Talking when the outbound call connects to the user.
-# Returns XML instructing AT to play a welcome audio then record the complaint.
-# ==========================================
+# ═══════════════════════════════════════════════════════════════════════════════
+# IVR VOICE WEBHOOKS
+# ═══════════════════════════════════════════════════════════════════════════════
+
 @app.route('/voice-outbound', methods=['POST'])
 def voice_outbound():
     destination_number = request.values.get("destinationNumber", "")
-
-    # Fetch user language profile from our session store
     user_profile = user_session_store.get(destination_number, {'lang': 'en'})
     user_lang    = user_profile['lang']
 
-    # Map dynamic audio file pointers based on user's dialect
-    welcome_audio_urls = {
+    audio_urls = {
         'en':  'https://your-server-storage.com/audio/welcome_en.mp3',
         'lg':  'https://your-server-storage.com/audio/welcome_lg.mp3',
         'rny': 'https://your-server-storage.com/audio/welcome_rny.mp3',
     }
-    target_audio = welcome_audio_urls.get(user_lang, welcome_audio_urls['en'])
+    target_audio = audio_urls.get(user_lang, audio_urls['en'])
 
-    # Build Africa's Talking Telephony XML response
     xml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Play url="{target_audio}"/>
-    <Record
-        finishOnKey="#"
-        maxLength="120"
-        trimSilence="true"
-        playBeep="true"
-        callbackUrl="https://your-ngrok-link.ngrok-free.app/voice-capture-callback"
-    />
+    <Record finishOnKey="#" maxLength="120" trimSilence="true" playBeep="true"
+        callbackUrl="https://your-ngrok-link.ngrok-free.app/voice-capture-callback"/>
 </Response>"""
 
     resp = make_response(xml_response)
     resp.headers['Content-Type'] = 'application/xml'
     return resp, 200
 
-# ==========================================
-# 📥 3. IVR RECORDING INGESTION WEBHOOK (Route: /voice-capture-callback)
-# Called by Africa's Talking after the user's voice complaint is recorded.
-# Ingests the recording URL and confirms receipt to the caller.
-# ==========================================
 @app.route('/voice-capture-callback', methods=['POST'])
 def voice_capture_callback():
-    recording_url  = request.values.get("recordingUrl", "")
-    caller_number  = request.values.get("callerNumber", "")
-    duration       = request.values.get("duration", "0")
+    recording_url = request.values.get("recordingUrl", "")
+    caller_number = request.values.get("callerNumber", "")
+    duration      = request.values.get("duration", "0")
+    print(f"[VOICE] Recording from {caller_number} ({duration}s): {recording_url}")
 
-    print(f"\n--- 🚨 NEW VOICE INGESTION INBOUND ---")
-    print(f"Source Phone  : {caller_number}")
-    print(f"Audio File URL: {recording_url}")
-    print(f"Call Duration : {duration} seconds")
-    print(f"Action        : Forwarding audio stream to Edge Speech-to-Text Pipeline...")
-    print(f"Action        : Syncing PWA Dashboard WebSockets (Status: Under Review)")
-
-    # Complete the call routing flow loop cleanly
     xml_closing = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="woman">Your complaint has been successfully recorded and shared securely with the Bank of Uganda.</Say>
@@ -233,14 +334,15 @@ def voice_capture_callback():
     resp.headers['Content-Type'] = 'application/xml'
     return resp, 200
 
-# ==========================================
-# 🔧 MOCK MICROSERVICE SIMULATION HOOKS
-# ==========================================
+# ═══════════════════════════════════════════════════════════════════════════════
+# MOCK MICROSERVICE HOOKS
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def trigger_outbound_ivr(phone, provider, lang):
-    print(f"[HTTP POST] Triggering Africa's Talking Outbound Voice API dialer targeting {phone} ({provider}) in dialect: {lang}")
+    print(f"[IVR] Dialling {phone} for {provider} complaint (lang={lang})")
 
 def trigger_status_callback_call(phone, lang):
-    print(f"[HTTP POST] Enqueueing automated diagnostic status callback task targeting {phone} in dialect: {lang}")
+    print(f"[IVR] Status callback queued for {phone} (lang={lang})")
 
 if __name__ == '__main__':
     app.run(debug=True)
