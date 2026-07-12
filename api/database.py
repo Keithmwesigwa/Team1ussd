@@ -42,18 +42,18 @@ def init_db():
     if cursor.fetchone()[0] == 0:
         now = datetime.now()
         
-        # 1. Active MTN Case (Reported 2 hours ago)
+        # 1. Active Telecom A Case (Reported 2 hours ago)
         created_1 = (now - timedelta(hours=2)).isoformat()
         deadline_1 = (now - timedelta(hours=2) + timedelta(hours=48)).isoformat()
         cursor.execute('''
             INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            'FG-8241', '+256770123456', 'MTN', 'Mobile Money Fraud', 150000.0, 'PENDING', 'English',
-            created_1, created_1, 'System registered initial USSD complaint from client.', deadline_1, 0
+            'FG-8241', '+256770123456', 'TELECOM A', 'USSD Reported', 150000.0, 'PENDING', 'English',
+            created_1, created_1, 'Subscriber reports unauthorized SIM swap on their line.', deadline_1, 0
         ))
         
-        # 2. Resolved Airtel Case (Reported 50 hours ago, resolved 10 hours ago)
+        # 2. Resolved Telecom B Case (Reported 50 hours ago, resolved 10 hours ago)
         created_2 = (now - timedelta(hours=50)).isoformat()
         resolved_2 = (now - timedelta(hours=10)).isoformat()
         deadline_2 = (now - timedelta(hours=50) + timedelta(hours=48)).isoformat()
@@ -61,33 +61,34 @@ def init_db():
             INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            'FG-1001', '+256701987654', 'AIRTEL', 'Card/Bank Fraud', 500000.0, 'RESOLVED', 'Luganda',
-            created_2, resolved_2, 'Reversal processed by Airtel Compliance. Funds restored.', deadline_2, 0
+            'FG-1001', '+256701987654', 'TELECOM B', 'Card/Bank Fraud', 500000.0, 'RESOLVED', 'Luganda',
+            created_2, resolved_2, 'Reversal processed. Funds restored.', deadline_2, 0
         ))
         
-        # 3. Overdue SLA-Breached MTN Case (Reported 72 hours ago, still pending)
+        # 3. Overdue SLA-Breached Telecom A Case (Reported 72 hours ago, still pending)
         created_3 = (now - timedelta(hours=72)).isoformat()
         deadline_3 = (now - timedelta(hours=72) + timedelta(hours=48)).isoformat()
         cursor.execute('''
             INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            'FG-4099', '+256772223344', 'MTN', 'Identity Theft', 2000000.0, 'PENDING', 'Runyakitara',
-            created_3, created_3, 'Subscriber reports unauthorized SIM swap on their MTN line.', deadline_3, 0
+            'FG-4099', '+256772223344', 'TELECOM A', 'Identity Theft', 2000000.0, 'PENDING', 'Runyakitara',
+            created_3, created_3, 'Subscriber reports SIM takeover on Telecom A.', deadline_3, 0
         ))
         
         conn.commit()
     
     conn.close()
 
-def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, language='English'):
+def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, language='English', notes=None):
     conn = get_connection()
     cursor = conn.cursor()
     
     now = datetime.now()
     created_at = now.isoformat()
     sla_deadline = (now + timedelta(hours=48)).isoformat()
-    notes = "Complaint received and logged in FraudGuard ledger."
+    if notes is None:
+        notes = "Complaint received and logged in FraudGuard ledger."
     
     cursor.execute('''
         INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
@@ -171,17 +172,17 @@ def get_stats():
     cursor.execute("SELECT COUNT(*) FROM complaints WHERE status != 'RESOLVED' AND ? > sla_deadline", (now_str,))
     breached = cursor.fetchone()[0]
     
-    # MTN Stats
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE provider = 'MTN'")
-    mtn_total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE provider = 'MTN' AND status = 'RESOLVED'")
-    mtn_resolved = cursor.fetchone()[0]
+    # Telecom A Stats
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'TELECOM A'")
+    telecom_a_total = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'TELECOM A' AND status = 'RESOLVED'")
+    telecom_a_resolved = cursor.fetchone()[0]
     
-    # Airtel Stats
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'AIRTEL'")
-    airtel_total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'AIRTEL' AND status = 'RESOLVED'")
-    airtel_resolved = cursor.fetchone()[0]
+    # Telecom B Stats
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'TELECOM B'")
+    telecom_b_total = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE UPPER(provider) = 'TELECOM B' AND status = 'RESOLVED'")
+    telecom_b_resolved = cursor.fetchone()[0]
     
     conn.close()
     
@@ -190,10 +191,10 @@ def get_stats():
         "active": active,
         "resolved": resolved,
         "breached": breached,
-        "mtn_total": mtn_total,
-        "mtn_resolved": mtn_resolved,
-        "airtel_total": airtel_total,
-        "airtel_resolved": airtel_resolved
+        "telecom_a_total": telecom_a_total,
+        "telecom_a_resolved": telecom_a_resolved,
+        "telecom_b_total": telecom_b_total,
+        "telecom_b_resolved": telecom_b_resolved
     }
 
 def check_phone_number(phone):

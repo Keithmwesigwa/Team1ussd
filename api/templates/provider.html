@@ -16,7 +16,7 @@
             --bg-muted: #f8fafc;
             --border:   #e2e8f0;
 
-            {% if provider_name == 'MTN' %}
+            {% if provider_name.upper() == 'TELECOM A' %}
             --accent:    #ca8a04;
             --accent-h:  #a16207;
             --accent-bg: #fef9c3;
@@ -176,7 +176,7 @@
         .fs:focus, .fta:focus { border-color:var(--accent); }
         .modal-actions { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.25rem; }
         .btn-cancel { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.65rem 1.25rem; border-radius:9px; font-weight:700; cursor:pointer; font-size:.85rem; }
-        .btn-save   { background:var(--accent); color:{% if provider_name == 'MTN' %}#000{% else %}#fff{% endif %}; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:800; cursor:pointer; font-size:.85rem; transition:all .18s; }
+        .btn-save   { background:var(--accent); color:{% if provider_name.upper() == 'TELECOM A' %}#000{% else %}#fff{% endif %}; border:none; padding:.65rem 1.5rem; border-radius:9px; font-weight:800; cursor:pointer; font-size:.85rem; transition:all .18s; }
         .btn-save:hover { background:var(--accent-h); }
 
         /* EMPTY STATE */
@@ -188,7 +188,7 @@
         <div class="logo-row">
             <div class="logo-sq-text">{{ provider_name[0] }}</div>
             <div>
-                <div class="logo-name">{{ provider_name }} Uganda</div>
+                <div class="logo-name">{{ provider_name }}</div>
                 <div class="logo-sub">Compliance & Dispute Resolution Desk</div>
             </div>
         </div>

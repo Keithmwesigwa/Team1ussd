@@ -26,9 +26,9 @@ init_db()
 
 # ─── Portal credentials (must match hints shown in login.html) ────────────────
 PORTAL_CREDS = {
-    'mtn':    {'username': 'mtn_compliance',   'password': 'mtn123'},
-    'airtel': {'username': 'airtel_compliance', 'password': 'airtel123'},
-    'bou':    {'username': 'bou_supervisor',    'password': 'bou123'},
+    'telecom_a': {'username': 'telecoma_compliance', 'password': 'telecoma123'},
+    'telecom_b': {'username': 'telecomb_compliance', 'password': 'telecomb123'},
+    'bou':       {'username': 'bou_supervisor',      'password': 'bou123'},
 }
 
 # ─── USSD in-memory session store ─────────────────────────────────────────────
@@ -41,11 +41,11 @@ translation_matrix = {
         'opt2':             "2. Track Active Complaint",
         'opt3':             "3. Change Language / Ennimi",
         'channel_choice':   "How would you like to report?\n1. Continue with USSD\n2. Switch to a Voice Call",
-        'select_fraud_type':"Choose fraud type:\n1. Unauthorised transaction\n2. Scammers pretending to be {provider} staff\n3. Scammers pretending to have sent money to you",
-        'ivr_redirect':     "Thank you. Your fraud incident under {provider} for {fraud_type} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
+        'write_description':"Please write a brief description of the incident:",
+        'ivr_redirect':     "Thank you. Your fraud incident under {provider} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
         'ivr_switch':       "Connecting you to a fraud reporting voice call. Please answer your phone.",
         'status_redirect':  "Fetching status. You will receive an automated voice update call shortly.",
-        'active_case':      "Active Case ({id}): {status}.\nDetails: {notes}...",
+        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: A detailed report will be sent to you shortly.",
         'no_case':          "No active complaints found for your phone number ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Invalid selection. Please try again.",
@@ -56,11 +56,11 @@ translation_matrix = {
         'opt2':             "2. Manya okugenda mu maaso kw'omusango",
         'opt3':             "3. Kyusa olulimi / Change Language",
         'channel_choice':   "Oyagala kukola mutya?\n1. Endedeeza mu USSD\n2. Talikira essimu",
-        'select_fraud_type':"Londa ekika ky'obufere:\n1. Ssente ezitakkiriziddwa\n2. Abafere abeeyita abakozi ba {provider}\n3. Abafere abeeyita abakusindikidde ssente",
-        'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} ku {fraud_type} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
+        'write_description':"Wandiika obusongofu ku nsonga eno mu bwangu:",
+        'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
         'ivr_switch':       "Tukukubirira essimu gy'okwemulugunya. Teeka essimu.",
         'status_redirect':  "Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
-        'active_case':      "Active Case ({id}) - Manya okugenda mu maaso: {status}.\nEbirowoozo: {notes}...",
+        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: Omusango gwo gutekebwako ripoota eijjuvu mu bwangu.",
         'no_case':          "Active Case: Tewali musango gwonna ogusangiddwa ku ssimu yo ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Okoze ensobi. Kyeyongere okugezaako.",
@@ -71,11 +71,11 @@ translation_matrix = {
         'opt2':             "2. Mazima omusango gwawe oku guri",
         'opt3':             "3. Hindura Orurimi / Change Language",
         'channel_choice':   "Oyagala kuhandiika mutya?\n1. Endeeza mu USSD\n2. Gwata esimu",
-        'select_fraud_type':"Toorana ekika ky'okwiba:\n1. Okwiha esente omu buryo butahikire\n2. Abashuma abeetwarra nka bakozi ba {provider}\n3. Abashuma abeetwarra ngu bakusindikira esente",
-        'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} ku {fraud_type} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
+        'write_description':"Handiika ebirikukwata aha nsonga egi mu bugufu:",
+        'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
         'ivr_switch':       "Tukuteererera esimu y'okwemurugunya. Gwata esimu yawe.",
         'status_redirect':  "Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
-        'active_case':      "Active Case ({id}) - Manya omusango gwawe: {status}.\nEbirowoozo: {notes}...",
+        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: Ripoota ejwire neza kukoherwa hati.",
         'no_case':          "Active Case: Tihariho musango gw'okwiba ogusangirwe ahari esimu yawe ({phone}).",
         'lang_select':      "Toorana Orurimi / Choose Language:",
         'invalid':          "Okora enshobi. Yegarukemu.",
@@ -99,11 +99,11 @@ def detect_provider(phone_number):
     AIRTEL_PREFIXES = {'70', '75', '74', '20'}
 
     if prefix in MTN_PREFIXES:
-        return ('MTN Uganda', 'MTN')
+        return ('Telecom A', 'TELECOM A')
     elif prefix in AIRTEL_PREFIXES:
-        return ('Airtel Uganda', 'AIRTEL')
+        return ('Telecom B', 'TELECOM B')
     else:
-        return ('MTN Uganda', 'MTN')  # default fallback
+        return ('Telecom A', 'TELECOM A')  # default fallback
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PORTAL ROUTES
@@ -132,8 +132,8 @@ def login(role):
 
             if role == 'bou':
                 return redirect(url_for('bou_dashboard'))
-            elif role in ('mtn', 'airtel'):
-                provider = 'MTN' if role == 'mtn' else 'AIRTEL'
+            elif role in ('telecom_a', 'telecom_b'):
+                provider = 'TELECOM A' if role == 'telecom_a' else 'TELECOM B'
                 return redirect(url_for('provider_dashboard', provider=provider))
         else:
             error = 'Invalid username or password. Please try again.'
@@ -258,10 +258,9 @@ def ussd():
     text         = request.values.get("text", "")
 
     if phone_number not in user_session_store:
-        user_session_store[phone_number] = {'lang': 'en', 'report_flow': None, 'report': {}}
+        user_session_store[phone_number] = {'lang': 'en'}
 
-    state = user_session_store[phone_number]
-    current_lang = state.get('lang', 'en')
+    current_lang = user_session_store[phone_number]['lang']
     t            = translation_matrix[current_lang]
     input_chain  = text.split('*')
     response     = ""
@@ -273,139 +272,61 @@ def ussd():
                     f"{t['opt2']}\n"
                     f"{t['opt3']}")
 
-    # Report flow: step 1 category selection
-    elif state.get('report_flow') == 'step1':
-        if text in ('1', '2', '3', '4'):
-            category_labels = {
-                '1': 'Unauthorized Transaction',
-                '2': 'Scammer Impersonation',
-                '3': 'Agent/Merchant Overcharge',
-                '4': 'Other',
-            }
-            state['report']['category'] = text
-            state['report']['category_label'] = category_labels[text]
-            state['report_flow'] = 'step2'
-            response = ("CON Step 2: Approximate Date & Time\n"
-                        "1. Today\n"
-                        "2. Yesterday\n"
-                        "3. Within the last week\n"
-                        "4. Earlier")
-        else:
-            response = ("CON Step 1: Category Selection\n"
-                        "1. Unauthorized Transaction\n"
-                        "2. Scammer Impersonation\n"
-                        "3. Agent/Merchant Overcharge\n"
-                        "4. Other")
-
-    # Report flow: step 2 date selection
-    elif state.get('report_flow') == 'step2':
-        if text in ('1', '2', '3', '4'):
-            date_labels = {
-                '1': 'Today',
-                '2': 'Yesterday',
-                '3': 'Within the last week',
-                '4': 'Earlier',
-            }
-            state['report']['date_choice'] = text
-            state['report']['date_label'] = date_labels[text]
-            state['report_flow'] = 'step3'
-            response = ("CON Step 3: Affected Amount (Optional)\n"
-                        "Enter exact amount (e.g., 10 to 500,000 UGX)")
-        else:
-            response = ("CON Step 2: Approximate Date & Time\n"
-                        "1. Today\n"
-                        "2. Yesterday\n"
-                        "3. Within the last week\n"
-                        "4. Earlier")
-
-    # Report flow: step 3 amount entry
-    elif state.get('report_flow') == 'step3':
-        amount_value = text.strip()
-        if amount_value == '':
-            amount_value = 'Not provided'
-            state['report']['amount_value'] = amount_value
-            state['report']['amount'] = None
-        else:
-            try:
-                amount_num = int(amount_value)
-                if 10 <= amount_num <= 500000:
-                    amount_value = f"{amount_num} UGX"
-                    state['report']['amount_value'] = amount_value
-                    state['report']['amount'] = amount_num
-                else:
-                    response = ("CON Step 3: Affected Amount (Optional)\n"
-                                "Enter exact amount (e.g., 10 to 500,000 UGX)\n"
-                                "Invalid amount. Please enter a value between 10 and 500,000.")
-                    resp = make_response(response)
-                    resp.headers['Content-Type'] = 'text/plain'
-                    return resp
-            except ValueError:
-                response = ("CON Step 3: Affected Amount (Optional)\n"
-                            "Enter exact amount (e.g., 10 to 500,000 UGX)\n"
-                            "Invalid amount. Please enter a numeric value.")
-                resp = make_response(response)
-                resp.headers['Content-Type'] = 'text/plain'
-                return resp
-
-        state['report_flow'] = 'step4'
-        amount_summary = state['report'].get('amount_value', 'Not provided')
-        response = ("CON Step 4: Summary & Confirmation\n"
-                    f"Report: {state['report']['category_label']} on {state['report']['date_label']} for {amount_summary}. Confirm?\n"
-                    "1. Submit Report\n"
-                    "2. Cancel")
-
-    # Report flow: step 4 confirmation
-    elif state.get('report_flow') == 'step4':
-        if text == '1':
-            provider_name, provider_short = detect_provider(phone_number)
-            ticket_id = '57489'
-            create_complaint(
-                ticket_id,
-                phone_number,
-                provider_short,
-                state['report']['category_label'],
-                state['report'].get('amount', 0),
-                'English'
-            )
-            state['report']['ticket_id'] = ticket_id
-            state['report_flow'] = None
-            state['report'] = {}
-            response = (
-                f"END Report filed successfully. Your incident ID is #{ticket_id}. "
-                f"Dial {service_code or '*XXX#'} to check status."
-            )
-        elif text == '2':
-            state['report_flow'] = None
-            state['report'] = {}
-            response = "END Report cancelled. Dial *XXX# to start again."
-        else:
-            response = ("CON Step 4: Summary & Confirmation\n"
-                        "1. Submit Report\n"
-                        "2. Cancel")
-
-    # BRANCH 1: REPORT FRAUD – start new flow
+    # BRANCH 1: REPORT FRAUD – channel choice (USSD or Voice Call)
     elif text == '1':
-        state['report_flow'] = 'step1'
-        response = ("CON Step 1: Category Selection\n"
-                    "1. Unauthorized Transaction\n"
-                    "2. Scammer Impersonation\n"
-                    "3. Agent/Merchant Overcharge\n"
-                    "4. Other")
+        response = f"CON {t['channel_choice']}"
+
+    # BRANCH 1*1: ask for description (USSD reporting path)
+    elif text == '1*1':
+        response = f"CON {t['write_description']}"
+
+    # BRANCH 1*2: switch to voice call
+    elif text == '1*2':
+        provider_name, _ = detect_provider(phone_number)
+        trigger_outbound_ivr(phone_number, provider_name, current_lang)
+        response = f"END {t['ivr_switch']}"
+
+    # BRANCH 1*1*[description]: file complaint via USSD with user description
+    elif input_chain[0] == '1' and len(input_chain) >= 3 and input_chain[1] == '1':
+        description = '*'.join(input_chain[2:])
+        provider_name, provider_short = detect_provider(phone_number)
+        lang_map = {'en': 'English', 'lg': 'Luganda', 'rny': 'Runyakitara'}
+
+        # Save complaint to DB
+        suffix    = ''.join(random.choices(string.digits, k=4))
+        ticket_id = f"FG-{suffix}"
+        create_complaint(ticket_id, phone_number, provider_short,
+                         "USSD Reported", 0, lang_map[current_lang], notes=description)
+
+        response = f"END {t['ivr_redirect'].format(provider=provider_name)}\nTicket: {ticket_id}."
+        trigger_outbound_ivr(phone_number, provider_name, current_lang)
 
     # BRANCH 2: TRACK STATUS
     elif text == '2':
         # Lookup database for active complaints associated with this phone number
         all_cases = get_all_complaints()
         user_cases = [c for c in all_cases if c['phone_number'] == phone_number]
-
+        
         if len(user_cases) > 0:
             # Show status of the most recent complaint
             latest = user_cases[0]
-            status_clean = latest['status'].replace('_', ' ')
-            response = f"END {t['active_case'].format(id=latest['id'], status=status_clean, notes=latest['notes'][:40])}"
+            status_map = {
+                'PENDING': 'pending',
+                'UNDER_INVESTIGATION': 'pending',
+                'RESOLVED': 'Resolved',
+                'CANCELLED': 'canceled',
+                'CANCELED': 'canceled',
+                'ESCALATED': 'pending'
+            }
+            status_clean = status_map.get(latest['status'].upper(), 'pending')
+            response = f"END {t['active_case'].format(id=latest['id'], status=status_clean)}"
+            
+            # Send simulated detailed SMS report
+            sms_text = f"FraudGuard Detailed Report: Your case {latest['id']} status is {status_clean}. Notes: {latest['notes']}. SLA: {latest['sla_deadline']}."
+            send_sms(phone_number, sms_text)
         else:
             response = f"END {t['no_case'].format(phone=phone_number)}"
-
+            
         trigger_status_callback_call(phone_number, current_lang)
 
     # BRANCH 3: LANGUAGE MENU
@@ -419,7 +340,7 @@ def ussd():
     elif input_chain[0] == '3' and len(input_chain) == 2:
         choice = input_chain[1]
         lang   = {'1': 'en', '2': 'lg', '3': 'rny'}.get(choice, 'en')
-        state['lang'] = lang
+        user_session_store[phone_number]['lang'] = lang
         new_t    = translation_matrix[lang]
         response = f"END {new_t['welcome']}."
 
@@ -483,6 +404,9 @@ def trigger_outbound_ivr(phone, provider, lang):
 
 def trigger_status_callback_call(phone, lang):
     print(f"[IVR] Status callback queued for {phone} (lang={lang})")
+
+def send_sms(phone, message):
+    print(f"[SMS] Sent SMS to {phone}: {message}")
 
 if __name__ == '__main__':
     app.run(debug=True)

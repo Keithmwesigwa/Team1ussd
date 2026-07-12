@@ -99,8 +99,8 @@
         .prov-label { font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--text-m); letter-spacing:.4px; }
         .prov-bar-bg { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
         .prov-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
-        .prov-bar-fill.mtn    { background:#ca8a04; }
-        .prov-bar-fill.airtel { background:#dc2626; }
+        .prov-bar-fill.telecoma { background:#ca8a04; }
+        .prov-bar-fill.telecomb { background:#dc2626; }
         .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }
 
         /* ─── CONTENT ─── */
@@ -133,8 +133,8 @@
         .badge-invest   { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
         .badge-resolved { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
         .badge-escalated{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
-        .badge-mtn      { background:#fef9c3; color:#92400e; }
-        .badge-airtel   { background:#fee2e2; color:#991b1b; }
+        .badge-telecoma { background:#fef9c3; color:#92400e; }
+        .badge-telecomb { background:#fee2e2; color:#991b1b; }
 
         .sla-ok  { color:var(--success); font-weight:700; font-size:.82rem; }
         .sla-warn{ color:var(--warning); font-weight:700; font-size:.82rem; }
@@ -209,19 +209,19 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <div class="prov-block">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="prov-label">MTN Uganda</span>
-                        <span id="mtn-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
+                        <span class="prov-label">Telecom A</span>
+                        <span id="telecoma-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
                     </div>
-                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill mtn" id="mtn-bar" style="width:0%;"></div></div>
-                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="mtn-pct" style="color:#ca8a04; font-weight:800;">0%</span></div>
+                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill telecoma" id="telecoma-bar" style="width:0%;"></div></div>
+                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="telecoma-pct" style="color:#ca8a04; font-weight:800;">0%</span></div>
                 </div>
                 <div class="prov-block">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="prov-label">Airtel Uganda</span>
-                        <span id="airtel-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
+                        <span class="prov-label">Telecom B</span>
+                        <span id="telecomb-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
                     </div>
-                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill airtel" id="airtel-bar" style="width:0%;"></div></div>
-                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="airtel-pct" style="color:#dc2626; font-weight:800;">0%</span></div>
+                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill telecomb" id="telecomb-bar" style="width:0%;"></div></div>
+                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="telecomb-pct" style="color:#dc2626; font-weight:800;">0%</span></div>
                 </div>
             </div>
         </div>
@@ -296,21 +296,21 @@
             const breached = cases.filter(c => new Date() > new Date(c.sla_deadline) && c.status !== 'RESOLVED').length;
             document.getElementById('stat-breached').textContent = breached;
 
-            // MTN bar
-            const mtnTotal = s.mtn_total || 0;
-            const mtnRes   = s.mtn_resolved || 0;
-            const mtnPct   = mtnTotal ? Math.round((mtnRes / mtnTotal) * 100) : 0;
-            document.getElementById('mtn-bar').style.width   = mtnPct + '%';
-            document.getElementById('mtn-stats').textContent = `${mtnRes} / ${mtnTotal}`;
-            document.getElementById('mtn-pct').textContent   = mtnPct + '%';
+            // Telecom A bar
+            const telecomATotal = s.telecom_a_total || 0;
+            const telecomARes   = s.telecom_a_resolved || 0;
+            const telecomAPct   = telecomATotal ? Math.round((telecomARes / telecomATotal) * 100) : 0;
+            document.getElementById('telecoma-bar').style.width   = telecomAPct + '%';
+            document.getElementById('telecoma-stats').textContent = `${telecomARes} / ${telecomATotal}`;
+            document.getElementById('telecoma-pct').textContent   = telecomAPct + '%';
 
-            // Airtel bar
-            const airTotal = s.airtel_total || 0;
-            const airRes   = s.airtel_resolved || 0;
-            const airPct   = airTotal ? Math.round((airRes / airTotal) * 100) : 0;
-            document.getElementById('airtel-bar').style.width   = airPct + '%';
-            document.getElementById('airtel-stats').textContent = `${airRes} / ${airTotal}`;
-            document.getElementById('airtel-pct').textContent   = airPct + '%';
+            // Telecom B bar
+            const telecomBTotal = s.telecom_b_total || 0;
+            const telecomBRes   = s.telecom_b_resolved || 0;
+            const telecomBPct   = telecomBTotal ? Math.round((telecomBRes / telecomBTotal) * 100) : 0;
+            document.getElementById('telecomb-bar').style.width   = telecomBPct + '%';
+            document.getElementById('telecomb-stats').textContent = `${telecomBRes} / ${telecomBTotal}`;
+            document.getElementById('telecomb-pct').textContent   = telecomBPct + '%';
 
             // Breach banner
             if (breached > 0) {
@@ -346,7 +346,7 @@
                 const breached = new Date() > new Date(c.sla_deadline) && c.status !== 'RESOLVED';
                 return `<tr class="${breached?'row-breached':''}">
                     <td><strong style="font-family:var(--mono);color:var(--text-h);">${c.id}</strong></td>
-                    <td><span class="badge ${c.provider === 'MTN' ? 'badge-mtn' : 'badge-airtel'}">${c.provider}</span></td>
+                    <td><span class="badge ${c.provider.toUpperCase() === 'TELECOM A' ? 'badge-telecoma' : 'badge-telecomb'}">${c.provider}</span></td>
                     <td style="font-size:.8rem;">${c.phone_number}</td>
                     <td style="font-size:.8rem;">${c.fraud_type}</td>
                     <td>${Number(c.amount).toLocaleString()}</td>
