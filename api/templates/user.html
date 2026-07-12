@@ -75,11 +75,9 @@
 
         /* CONTENT GRID */
         .content {
-            flex:1; max-width:1150px; width:100%; margin:0 auto;
-            padding:2rem; display:grid;
-            grid-template-columns:1fr 1fr; gap:2rem;
+            flex:1; max-width:680px; width:100%; margin:0 auto;
+            padding:2rem 2rem 4rem; display:flex; flex-direction:column; gap:2rem;
         }
-        @media(max-width:860px){ .content{ grid-template-columns:1fr; } }
 
         .card {
             background:var(--bg-card); border:1px solid var(--border);
@@ -208,6 +206,80 @@
             font-weight:700; cursor:pointer; transition:all .18s;
         }
         .btn-close:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+        /* LANDING GRID & CARDS */
+        .landing-grid {
+            max-width: 1150px;
+            width: 100%;
+            margin: 2rem auto 0;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        @media(max-width:768px){ .landing-grid { grid-template-columns: 1fr; } }
+        
+        .landing-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all .25s ease;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+        .landing-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 24px rgba(0,176,116,.08);
+        }
+        .landing-card.active {
+            border-color: var(--accent);
+            background: #f0fdf4;
+            box-shadow: 0 8px 24px rgba(0,176,116,.1);
+        }
+        .landing-card .lc-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,.02);
+            transition: all .2s;
+        }
+        .landing-card.active .lc-icon {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+        .landing-card .lc-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-h);
+        }
+        .landing-card .lc-desc {
+            font-size: .82rem;
+            color: var(--text-m);
+            line-height: 1.45;
+        }
+
+        /* DYNAMIC PANEL STYLING */
+        .panel {
+            display: none;
+            width: 100%;
+            animation: fadeUp .3s ease;
+        }
+        .panel.active {
+            display: flex;
+            flex-direction: column;
+        }
     </style>
 </head>
 <body>
@@ -229,9 +301,28 @@
         <p>File an official fraud complaint or track an existing case using your ticket ID.</p>
     </div>
 
+    <!-- LANDING GRID (CARDS ACTING AS BUTTONS) -->
+    <div class="landing-grid">
+        <div class="landing-card active" id="btn-show-report" onclick="switchPanel('report')">
+            <div class="lc-icon"><i data-lucide="shield-alert" style="width:20px;height:20px;"></i></div>
+            <div class="lc-title">Report Fraud</div>
+            <div class="lc-desc">File an official mobile money fraud incident report.</div>
+        </div>
+        <div class="landing-card" id="btn-show-track" onclick="switchPanel('track')">
+            <div class="lc-icon"><i data-lucide="search" style="width:20px;height:20px;"></i></div>
+            <div class="lc-title">Track Complaint</div>
+            <div class="lc-desc">Check live case progress and resolution status.</div>
+        </div>
+        <div class="landing-card" id="btn-show-verify" onclick="switchPanel('verify')">
+            <div class="lc-icon"><i data-lucide="shield-check" style="width:20px;height:20px;"></i></div>
+            <div class="lc-title">Verify Number</div>
+            <div class="lc-desc">Query if a phone number was reported in fraud cases.</div>
+        </div>
+    </div>
+
     <div class="content">
-        <!-- FILE COMPLAINT -->
-        <div class="card">
+        <!-- FILE COMPLAINT PANEL -->
+        <div class="card panel active" id="panel-report">
             <div class="card-title">
                 <div class="ct-icon"><i data-lucide="edit-3" style="width:14px;height:14px;"></i></div>
                 Report a Fraudulent Incident
@@ -274,8 +365,8 @@
             </form>
         </div>
 
-        <!-- TRACK CASE -->
-        <div class="card">
+        <!-- TRACK CASE PANEL -->
+        <div class="card panel" id="panel-track">
             <div class="card-title">
                 <div class="ct-icon track"><i data-lucide="search" style="width:14px;height:14px;"></i></div>
                 Track Incident Progress
@@ -289,9 +380,9 @@
 
             <!-- Empty state -->
             <div class="empty-state" id="track-empty">
-                <i data-lucide="folder-search" style="width:3.5rem;height:3.5rem;"></i>
+                <i data-lucide="folder-search" style="width:3.5rem;height:3.5rem;color:var(--border);"></i>
                 <div style="font-weight:600;">Enter a Case ID to view resolution logs</div>
-                <div style="font-size:.8rem;">Your ID was shown when you filed your complaint</div>
+                <div style="font-size:.8rem;color:var(--text-m);">Your ID was shown when you filed your complaint</div>
             </div>
 
             <!-- Results -->
@@ -339,6 +430,49 @@
                 </div>
             </div>
         </div>
+
+        <!-- VERIFY PHONE NUMBER PANEL -->
+        <div class="card panel" id="panel-verify">
+            <div class="card-title">
+                <div class="ct-icon"><i data-lucide="shield-check" style="width:14px;height:14px;"></i></div>
+                Verify a Suspect Number
+            </div>
+            
+            <div style="font-size:.85rem; color:var(--text-m); margin-bottom:1.5rem; line-height:1.5;">
+                Enter a mobile money phone number below to query the Bank of Uganda database. We will check if this number has been flagged in active fraud complaints.
+            </div>
+
+            <div class="search-row">
+                <input type="text" class="fi" id="verify-phone" placeholder="Suspect number (e.g. +256770000000)" autocomplete="off">
+                <button class="btn-track" onclick="verifyNumber()">
+                    <i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Verify
+                </button>
+            </div>
+
+            <!-- Empty state / Initial state -->
+            <div class="empty-state" id="verify-empty">
+                <i data-lucide="info" style="width:3.5rem;height:3.5rem;color:var(--border);"></i>
+                <div style="font-weight:600;">Enter a phone number to run database checks</div>
+            </div>
+
+            <!-- Verification result panel -->
+            <div class="track-panel" id="verify-panel" style="display:none; flex-direction:column; gap:1.25rem; margin-top:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:.75rem;">
+                    <span style="font-weight:800; color:var(--text-h); font-size:1rem;" id="v-result-phone">+256770123456</span>
+                    <span class="badge" id="v-result-badge" style="padding:.35rem .95rem; font-size:.72rem;">0 Reports</span>
+                </div>
+                
+                <div style="display:flex; align-items:center; gap:.75rem; background:var(--bg-muted); border:1px solid var(--border); padding:1rem; border-radius:12px;">
+                    <div id="v-result-icon-wrap" style="width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i id="v-result-icon" data-lucide="shield-check" style="width:1.25rem; height:1.25rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800; font-size:.9rem; color:var(--text-h);" id="v-result-title">Safe / Clear</div>
+                        <div style="font-size:.82rem; color:var(--text-m); margin-top:.15rem;" id="v-result-msg">No reported incidents found.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- SUCCESS MODAL -->
@@ -359,6 +493,83 @@
 
     <script>
         lucide.createIcons();
+
+        function switchPanel(panelId) {
+            // Remove active class from all landing cards
+            document.getElementById('btn-show-report').classList.remove('active');
+            document.getElementById('btn-show-track').classList.remove('active');
+            document.getElementById('btn-show-verify').classList.remove('active');
+            
+            // Hide all panels
+            document.getElementById('panel-report').classList.remove('active');
+            document.getElementById('panel-track').classList.remove('active');
+            document.getElementById('panel-verify').classList.remove('active');
+            
+            // Add active class to clicked card and show panel
+            if (panelId === 'report') {
+                document.getElementById('btn-show-report').classList.add('active');
+                document.getElementById('panel-report').classList.add('active');
+            } else if (panelId === 'track') {
+                document.getElementById('btn-show-track').classList.add('active');
+                document.getElementById('panel-track').classList.add('active');
+            } else if (panelId === 'verify') {
+                document.getElementById('btn-show-verify').classList.add('active');
+                document.getElementById('panel-verify').classList.add('active');
+            }
+        }
+
+        async function verifyNumber() {
+            const phone = document.getElementById('verify-phone').value.trim();
+            if (!phone) { alert('Please enter a phone number to verify.'); return; }
+            
+            try {
+                const r = await fetch(`/api/check-number/${encodeURIComponent(phone)}`);
+                if (!r.ok) throw new Error('Server error');
+                const d = await r.json();
+                
+                document.getElementById('verify-empty').style.display = 'none';
+                const panel = document.getElementById('verify-panel');
+                panel.style.display = 'flex';
+                
+                document.getElementById('v-result-phone').textContent = d.phone;
+                
+                const badge = document.getElementById('v-result-badge');
+                const title = document.getElementById('v-result-title');
+                const msg = document.getElementById('v-result-msg');
+                const iconWrap = document.getElementById('v-result-icon-wrap');
+                const icon = document.getElementById('v-result-icon');
+                
+                if (d.status === 'CLEAN') {
+                    badge.className = 'badge badge-resolved';
+                    badge.textContent = '0 Reports';
+                    title.textContent = 'Clean / Verified';
+                    msg.textContent = d.message;
+                    iconWrap.style.background = '#d1fae5';
+                    iconWrap.style.color = '#065f46';
+                    icon.setAttribute('data-lucide', 'shield-check');
+                } else if (d.status === 'FLAGGED') {
+                    badge.className = 'badge badge-pending';
+                    badge.textContent = '1 Report';
+                    title.textContent = 'Caution / Flagged';
+                    msg.textContent = d.message;
+                    iconWrap.style.background = '#fef9c3';
+                    iconWrap.style.color = '#92400e';
+                    icon.setAttribute('data-lucide', 'info');
+                } else {
+                    badge.className = 'badge badge-escalated';
+                    badge.textContent = `${d.count} Reports`;
+                    title.textContent = 'High Risk Alert';
+                    msg.textContent = d.message;
+                    iconWrap.style.background = '#fee2e2';
+                    iconWrap.style.color = '#991b1b';
+                    icon.setAttribute('data-lucide', 'alert-triangle');
+                }
+                
+                lucide.createIcons();
+            } catch(err) {
+                alert('Error querying database: ' + err.message);
+            }
+        }
 
         function closeModal() { document.getElementById('modal-mask').style.display = 'none'; }
         function copyTicket() {

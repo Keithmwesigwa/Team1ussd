@@ -195,3 +195,13 @@ def get_stats():
         "airtel_total": airtel_total,
         "airtel_resolved": airtel_resolved
     }
+
+def check_phone_number(phone):
+    conn = get_connection()
+    cursor = conn.cursor()
+    clean_number = phone.strip()
+    cursor.execute("SELECT COUNT(*) FROM complaints WHERE phone_number = ? OR notes LIKE ?", (clean_number, f"%{clean_number}%"))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count
+

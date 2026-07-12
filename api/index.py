@@ -13,11 +13,13 @@ app.secret_key = os.environ.get('SECRET_KEY', 'fraudguard-bou-2026-dev-secret')
 try:
     from api.database import (init_db, create_complaint, get_complaint,
                               get_all_complaints, get_provider_complaints,
-                              update_status, escalate_complaint, get_stats)
+                              update_status, escalate_complaint, get_stats,
+                              check_phone_number)
 except ImportError:
     from database import (init_db, create_complaint, get_complaint,
                           get_all_complaints, get_provider_complaints,
-                          update_status, escalate_complaint, get_stats)
+                          update_status, escalate_complaint, get_stats,
+                          check_phone_number)
 
 # Initialise DB + seed sample rows on cold start
 init_db()
@@ -192,6 +194,27 @@ def api_escalate(complaint_id):
     escalate_complaint(complaint_id)
     update_status(complaint_id, 'ESCALATED', 'Case escalated to BoU enforcement desk.')
     return jsonify({'ok': True, 'id': complaint_id})
+
+@app.route('/api/check-number/<phone>', methods=['GET'])
+def api_check_number(phone):
+    count = check_phone_number(phone)
+    # Determine risk category
+    if count == 0:
+        status = "CLEAN"
+        message = "No fraud incidents reported for this number."
+    elif count == 1:
+        status = "FLAGGED"
+        message = f"Caution: Flagged in {count} fraud report."
+    else:
+        status = "HIGH_RISK"
+        message = f"Warning: High risk! Flagged in {count} fraud reports."
+        
+    return jsonify({
+        'phone': phone,
+        'count': count,
+        'status': status,
+        'message': message
+    })
 
 @app.route('/api/provider/<provider>/complaints')
 def api_provider_complaints(provider):

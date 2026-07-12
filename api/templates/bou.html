@@ -54,23 +54,58 @@
         .role-chip { background:rgba(252,211,77,.15); border:1px solid rgba(252,211,77,.3); color:#fcd34d; padding:.3rem .9rem; border-radius:99px; font-size:.75rem; font-weight:700; }
         .logout-btn { display:flex; align-items:center; gap:.4rem; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.8); padding:.4rem .9rem; border-radius:8px; font-size:.8rem; font-weight:700; cursor:pointer; text-decoration:none; transition:all .18s; }
         .logout-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--shadow);
+            transition: transform .2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card .sc-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,.02);
+        }
+        .stat-card.total { background: #eff6ff; border-color: #bfdbfe; }
+        .stat-card.total .sc-icon { color: #1e3a8a; }
+        .stat-card.active { background: #faf5ff; border-color: #e9d5ff; }
+        .stat-card.active .sc-icon { color: #6b21a8; }
+        .stat-card.resolved { background: #ecfdf5; border-color: #a7f3d0; }
+        .stat-card.resolved .sc-icon { color: #065f46; }
+        .stat-card.breached { background: #fef2f2; border-color: #fca5a5; }
+        .stat-card.breached .sc-icon { color: #991b1b; }
 
-        /* ─── STATS BAR ─── */
-        .stats-bar { background:var(--bg-card); border-bottom:1px solid var(--border); padding:1.25rem 2rem; display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center; }
-        .stat-item { display:flex; flex-direction:column; gap:.15rem; }
-        .stat-val  { font-size:1.5rem; font-weight:800; color:var(--text-h); line-height:1; }
-        .stat-lbl  { font-size:.7rem; font-weight:600; color:var(--text-m); text-transform:uppercase; letter-spacing:.4px; }
-        .stat-divider { width:1px; background:var(--border); align-self:stretch; margin:0 .5rem; }
+        .stat-val { font-size: 1.6rem; font-weight: 800; color: var(--text-h); line-height: 1.1; }
+        .stat-lbl { font-size: .72rem; font-weight: 700; color: var(--text-m); text-transform: uppercase; letter-spacing: .4px; }
 
         /* Provider comparison */
-        .provider-compare { display:flex; gap:1.25rem; margin-left:auto; flex-wrap:wrap; }
-        .prov-block { display:flex; flex-direction:column; gap:.35rem; min-width:140px; }
+        .prov-block { display:flex; flex-direction:column; gap:.35rem; }
         .prov-label { font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--text-m); letter-spacing:.4px; }
         .prov-bar-bg { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
         .prov-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
         .prov-bar-fill.mtn    { background:#ca8a04; }
         .prov-bar-fill.airtel { background:#dc2626; }
-        .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }
+        .prov-stats { font-size:.75rem; color:var(--text-b); font-weight:600; display:flex; justify-content:space-between; }content:space-between; }
 
         /* ─── CONTENT ─── */
         .content { flex:1; max-width:1280px; width:100%; margin:0 auto; padding:1.75rem 2rem; display:flex; flex-direction:column; gap:1.5rem; }
@@ -134,44 +169,67 @@
         </div>
     </header>
 
-    <!-- STATS BAR -->
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-val" id="stat-total">—</div>
-            <div class="stat-lbl">Total Cases</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-            <div class="stat-val" id="stat-active" style="color:#4338ca;">—</div>
-            <div class="stat-lbl">Active</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-            <div class="stat-val" id="stat-resolved" style="color:var(--success);">—</div>
-            <div class="stat-lbl">Resolved</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-            <div class="stat-val" id="stat-breached" style="color:var(--danger);">—</div>
-            <div class="stat-lbl">SLA Breached</div>
-        </div>
-
-        <!-- Provider comparison bars -->
-        <div class="provider-compare">
-            <div class="prov-block">
-                <div class="prov-label">MTN Resolution Rate</div>
-                <div class="prov-bar-bg"><div class="prov-bar-fill mtn" id="mtn-bar" style="width:0%;"></div></div>
-                <div class="prov-stats"><span id="mtn-stats">0 / 0</span><span id="mtn-pct" style="color:var(--gold);">0%</span></div>
-            </div>
-            <div class="prov-block">
-                <div class="prov-label">Airtel Resolution Rate</div>
-                <div class="prov-bar-bg"><div class="prov-bar-fill airtel" id="airtel-bar" style="width:0%;"></div></div>
-                <div class="prov-stats"><span id="airtel-stats">0 / 0</span><span id="airtel-pct" style="color:var(--danger);">0%</span></div>
-            </div>
-        </div>
-    </div>
-
     <div class="content">
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="sc-icon"><i data-lucide="database" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="stat-val" id="stat-total">—</div>
+                    <div class="stat-lbl">Total Cases</div>
+                </div>
+            </div>
+            <div class="stat-card active">
+                <div class="sc-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="stat-val" id="stat-active">—</div>
+                    <div class="stat-lbl">Active Cases</div>
+                </div>
+            </div>
+            <div class="stat-card resolved">
+                <div class="sc-icon"><i data-lucide="check-circle" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="stat-val" id="stat-resolved">—</div>
+                    <div class="stat-lbl">Resolved Cases</div>
+                </div>
+            </div>
+            <div class="stat-card breached">
+                <div class="sc-icon"><i data-lucide="alert-octagon" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="stat-val" id="stat-breached">—</div>
+                    <div class="stat-lbl">SLA Breached</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROVIDER PERFORMANCE COMPARISON -->
+        <div class="card" style="padding: 1.25rem;">
+            <div class="card-hd" style="margin-bottom: 1rem;">
+                <div class="card-title">
+                    <div class="ct-icon"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i></div>
+                    Provider Resolution SLA Performance
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="prov-block">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="prov-label">MTN Uganda</span>
+                        <span id="mtn-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
+                    </div>
+                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill mtn" id="mtn-bar" style="width:0%;"></div></div>
+                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="mtn-pct" style="color:#ca8a04; font-weight:800;">0%</span></div>
+                </div>
+                <div class="prov-block">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="prov-label">Airtel Uganda</span>
+                        <span id="airtel-stats" style="font-size:.78rem; font-weight:700;">0 / 0 resolved</span>
+                    </div>
+                    <div class="prov-bar-bg" style="margin: .4rem 0;"><div class="prov-bar-fill airtel" id="airtel-bar" style="width:0%;"></div></div>
+                    <div class="prov-stats" style="display:flex; justify-content:flex-end;"><span id="airtel-pct" style="color:#dc2626; font-weight:800;">0%</span></div>
+                </div>
+            </div>
+        </div>
+
         <!-- SLA Breach banner -->
         <div class="breach-banner" id="breach-banner" style="display:none;">
             <div class="breach-txt">
