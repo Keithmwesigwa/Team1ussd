@@ -8,9 +8,11 @@ interface MasterDockProps {
   theme: 'light' | 'dark';
   onRoleChange: (role: 'bou' | 'mtn' | 'airtel' | 'citizen') => void;
   onThemeToggle: () => void;
+  authSession?: { username: string; token: string } | null;
+  onLogout?: () => void;
 }
 
-export default function MasterDock({ currentRole, theme, onRoleChange, onThemeToggle }: MasterDockProps) {
+export default function MasterDock({ currentRole, theme, onRoleChange, onThemeToggle, authSession, onLogout }: MasterDockProps) {
   return (
     <header className="sticky top-0 z-50 w-full px-6 py-4 bg-card-bg/85 backdrop-blur-md border-b border-card-border shadow-sm flex items-center justify-between transition-all duration-300">
       <div className="flex items-center gap-3">
@@ -89,14 +91,32 @@ export default function MasterDock({ currentRole, theme, onRoleChange, onThemeTo
         </button>
       </div>
 
-      {/* Dark/Light mode switch */}
-      <button
-        onClick={onThemeToggle}
-        className="p-2.5 rounded-xl border border-card-border bg-card-bg hover:bg-progress-bg text-text-main shadow-sm flex items-center justify-center cursor-pointer transform hover:scale-105 transition-all duration-200"
-        title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-      >
-        {theme === 'light' ? <Moon className="w-5 h-5 text-gray-700" /> : <Sun className="w-5 h-5 text-yellow-400" />}
-      </button>
+      {/* Right side controls */}
+      <div className="flex items-center gap-3">
+        {authSession && (
+          <div className="hidden md:flex items-center gap-2 bg-[#11141E] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-[10px] text-slate-400">Auth:</span>
+            <span className="font-mono text-[10px] text-white max-w-[120px] truncate">{authSession.username}</span>
+            {onLogout && (
+              <button 
+                onClick={onLogout}
+                className="ml-2 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-black text-red-400 hover:bg-red-500 hover:text-white transition cursor-pointer"
+              >
+                LOGOUT
+              </button>
+            )}
+          </div>
+        )}
+
+        <button
+          onClick={onThemeToggle}
+          className="p-2.5 rounded-xl border border-card-border bg-card-bg hover:bg-progress-bg text-text-main shadow-sm flex items-center justify-center cursor-pointer transform hover:scale-105 transition-all duration-200"
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? <Moon className="w-5 h-5 text-gray-700" /> : <Sun className="w-5 h-5 text-yellow-400" />}
+        </button>
+      </div>
     </header>
   );
 }

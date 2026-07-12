@@ -111,6 +111,13 @@ export default function Page() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [apiConnected, setApiConnected] = useState(false);
 
+  // Authentication State
+  const [authSession, setAuthSession] = useState<{ username: string; token: string } | null>(null);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
   // Webhook Simulator state
   const [simPhone, setSimPhone] = useState('+256772123456');
   const [simProvider, setSimProvider] = useState<'mtn' | 'airtel'>('mtn');
@@ -143,6 +150,19 @@ export default function Page() {
       setCurrentRole(detectedRole);
     }
   }, []);
+
+  // Check storage session on role/mount shift
+  useEffect(() => {
+    if (isMounted) {
+      const stored = localStorage.getItem(`tulinde_session_${currentRole}`);
+      if (stored) {
+        setAuthSession(JSON.parse(stored));
+      } else {
+        setAuthSession(null);
+      }
+      setAuthError(null);
+    }
+  }, [currentRole, isMounted]);
 
   // Bind role and theme selectors to html DOM elements (triggers global CSS vars switches)
   useEffect(() => {
@@ -201,6 +221,45 @@ export default function Page() {
       }
     }
     setCurrentRole(role);
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch('http://localhost:3001/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: loginEmail,
+          password: loginPassword,
+          role: currentRole
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const session = { username: data.username, token: data.token };
+        localStorage.setItem(`tulinde_session_${currentRole}`, JSON.stringify(session));
+        setAuthSession(session);
+        setLoginEmail('');
+        setLoginPassword('');
+      } else {
+        const errData = await res.json();
+        setAuthError(errData.error || 'Authentication failed. Check credentials.');
+      }
+    } catch (err) {
+      setAuthError('Connection to authorization server failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(`tulinde_session_${currentRole}`);
+    setAuthSession(null);
   };
 
   const handleThemeToggle = () => {
@@ -316,6 +375,113 @@ export default function Page() {
     );
   }
 
+  if (!authSession) {
+    const titles = {
+      bou: "Bank of Uganda • CPRP Command Center",
+      mtn: "CPRP Institution Console • MTN Uganda",
+      airtel: "CPRP Institution Console • Airtel Uganda"
+    };
+
+    const activeTitle = titles[currentRole] || "Compliance Admin Portal";
+
+    return (
+      <div className="min-h-screen flex flex-col justify-between bg-[#0A0A0C]">
+        <MasterDock 
+          currentRole={currentRole} 
+          theme={theme} 
+          onRoleChange={handleRoleChange} 
+          onThemeToggle={handleThemeToggle} 
+          authSession={authSession}
+          onLogout={handleLogout}
+        />
+
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#11141E] border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+            
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-white tracking-tight">Security Gateway</h2>
+              <p className="text-[10px] uppercase tracking-widest font-extrabold text-text-muted mt-1">{activeTitle}</p>
+            </div>
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Authorized Username / Email</label>
+                <input 
+                  type="email" 
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="name@domain.co.ug"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1.5">Secure Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              {authError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <button 
+                type="submit"
+                disabled={authLoading}
+                className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md ${
+                  currentRole === 'mtn' ? 'bg-[#FFCC00] text-black hover:bg-[#FFCC00]/90' :
+                  currentRole === 'airtel' ? 'bg-[#E40000] text-white hover:bg-[#E40000]/90' :
+                  'bg-[#800020] text-white hover:bg-[#800020]/90'
+                }`}
+              >
+                {authLoading ? 'Authorizing Session...' : 'Establish Session'}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
+              <span className="text-[9px] font-black text-[#D97706] tracking-wider uppercase block">Developer Test Credentials:</span>
+              <div className="bg-slate-950/80 border border-slate-900 rounded-xl p-3 text-[10px] font-mono text-slate-400 space-y-1">
+                {currentRole === 'bou' && (
+                  <div>
+                    <span className="text-white">Email:</span> admin@bou.go.ug<br/>
+                    <span className="text-white">Password:</span> bouadmin123
+                  </div>
+                )}
+                {currentRole === 'mtn' && (
+                  <div>
+                    <span className="text-white">Email:</span> agent@mtn.co.ug<br/>
+                    <span className="text-white">Password:</span> mtnagent123
+                  </div>
+                )}
+                {currentRole === 'airtel' && (
+                  <div>
+                    <span className="text-white">Email:</span> agent@airtel.co.ug<br/>
+                    <span className="text-white">Password:</span> airtelagent123
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <footer className="py-4 text-center text-[10px] text-text-muted border-t border-card-border bg-[#11141E]">
+          Bank of Uganda (BoU) Financial Consumer Protection (CPRP) System • Authenticated Gateway
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col justify-between">
       
@@ -325,6 +491,8 @@ export default function Page() {
         theme={theme} 
         onRoleChange={handleRoleChange} 
         onThemeToggle={handleThemeToggle} 
+        authSession={authSession}
+        onLogout={handleLogout}
       />
 
       {/* Connection Indicator Bar */}

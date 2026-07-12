@@ -460,4 +460,76 @@ router.post('/chat/message', async (req, res) => {
   }
 });
 
+/**
+ * 4. ROLE-BASED ACCESS CONTROL (RBAC) AUTH ENDPOINTS
+ */
+
+// POST /api/v1/auth/login
+router.post('/auth/login', (req, res) => {
+  const { username, password, role } = req.body;
+
+  if (!username || !password || !role) {
+    return res.status(400).json({ error: 'Username, password, and role are required.' });
+  }
+
+  // Preseeded users
+  const adminUsers = {
+    bou: { email: 'admin@bou.go.ug', pass: 'bouadmin123' },
+    mtn: { email: 'agent@mtn.co.ug', pass: 'mtnagent123' },
+    airtel: { email: 'agent@airtel.co.ug', pass: 'airtelagent123' }
+  };
+
+  const user = adminUsers[role];
+  if (!user || user.email !== username.toLowerCase().trim() || user.pass !== password) {
+    return res.status(401).json({ error: 'Invalid credentials or role mismatch.' });
+  }
+
+  return res.json({
+    success: true,
+    token: `mock-token-${role}-${Math.random().toString(36).substring(2, 9)}`,
+    username: user.email,
+    role
+  });
+});
+
+// POST /api/v1/auth/otp/send
+router.post('/auth/otp/send', (req, res) => {
+  const { phone_number } = req.body;
+
+  if (!phone_number) {
+    return res.status(400).json({ error: 'Phone number is required.' });
+  }
+
+  // Simulate SMS dispatch
+  const code = '123456';
+  console.log(`\n======================================================`);
+  console.log(`  [SMS GATEWAY] Dispatching verification code to: ${phone_number}`);
+  console.log(`  Verification Code: ${code}`);
+  console.log(`======================================================\n`);
+
+  return res.json({
+    success: true,
+    message: `OTP code dispatched via SMS. (Simulated OTP: ${code})`
+  });
+});
+
+// POST /api/v1/auth/otp/verify
+router.post('/auth/otp/verify', (req, res) => {
+  const { phone_number, code } = req.body;
+
+  if (!phone_number || !code) {
+    return res.status(400).json({ error: 'Phone number and verification code are required.' });
+  }
+
+  if (code !== '123456') {
+    return res.status(401).json({ error: 'Invalid verification code.' });
+  }
+
+  return res.json({
+    success: true,
+    token: `mock-token-citizen-${Math.random().toString(36).substring(2, 9)}`,
+    phone_number
+  });
+});
+
 module.exports = router;
