@@ -22,11 +22,11 @@ except ImportError:
 # Initialise DB + seed sample rows on cold start
 init_db()
 
-# ─── Portal credentials (MVP hardcoded – replace with DB auth in prod) ────────
+# ─── Portal credentials (must match hints shown in login.html) ────────────────
 PORTAL_CREDS = {
-    'mtn':    {'username': 'mtn_admin',    'password': 'mtn2026'},
-    'airtel': {'username': 'airtel_admin', 'password': 'airtel2026'},
-    'bou':    {'username': 'bou_admin',    'password': 'bou2026'},
+    'mtn':    {'username': 'mtn_compliance',   'password': 'mtn123'},
+    'airtel': {'username': 'airtel_compliance', 'password': 'airtel123'},
+    'bou':    {'username': 'bou_supervisor',    'password': 'bou123'},
 }
 
 # ─── USSD in-memory session store ─────────────────────────────────────────────
@@ -124,7 +124,7 @@ def provider_dashboard(provider):
     if session.get('role') not in ('mtn', 'airtel'):
         role = 'mtn' if provider.upper() == 'MTN' else 'airtel'
         return redirect(url_for('login', role=role))
-    return render_template('provider.html', provider=provider.upper())
+    return render_template('provider.html', provider_name=provider.upper())
 
 # ── Bank of Uganda Dashboard ───────────────────────────────────────────────────
 @app.route('/bou')
