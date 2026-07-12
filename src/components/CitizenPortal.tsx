@@ -207,8 +207,10 @@ export default function CitizenPortal({ onRefresh }: { onRefresh: () => void }) 
     setLoginErrorMsg(null);
     setLoginSuccessMsg(null);
 
+    const apiHost = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
+
     try {
-      const res = await fetch('http://localhost:3001/api/v1/auth/otp/send', {
+      const res = await fetch(`${apiHost}/api/v1/auth/otp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number: loginPhone })
@@ -234,8 +236,10 @@ export default function CitizenPortal({ onRefresh }: { onRefresh: () => void }) 
     setLoginLoading(true);
     setLoginErrorMsg(null);
 
+    const apiHost = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
+
     try {
-      const res = await fetch('http://localhost:3001/api/v1/auth/otp/verify', {
+      const res = await fetch(`${apiHost}/api/v1/auth/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone_number: loginPhone, code: loginOtpCode })
