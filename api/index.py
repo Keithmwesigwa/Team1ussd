@@ -445,11 +445,12 @@ def voice_outbound():
     }
     target_audio = audio_urls.get(user_lang, audio_urls['en'])
 
+    callback_url = f"{request.url_root.rstrip('/')}/voice-capture-callback"
     xml_response = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Play url="{target_audio}"/>
     <Record finishOnKey="#" maxLength="120" trimSilence="true" playBeep="true"
-        callbackUrl="https://your-ngrok-link.ngrok-free.app/voice-capture-callback"/>
+        callbackUrl="{callback_url}"/>
 </Response>"""
 
     resp = make_response(xml_response)
@@ -514,9 +515,13 @@ def trigger_outbound_ivr(phone, provider, lang):
         print(f"[CALL-MOCK] Dialling {phone} for {provider} (lang={lang})")
         return
     try:
+        try:
+            root_url = request.url_root.rstrip('/')
+        except Exception:
+            root_url = 'https://your-app.vercel.app'
         callback_url = os.environ.get(
             'AT_VOICE_CALLBACK_URL',
-            'https://your-app.vercel.app/voice-outbound'
+            f"{root_url}/voice-outbound"
         )
         resp = http_requests.post(
             AT_CALL_URL,
