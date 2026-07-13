@@ -14,21 +14,21 @@
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         :root {
-            --bg-page:  #f1f5f9;
-            --bg-card:  #ffffff;
-            --bg-muted: #f8fafc;
-            --border:   #e2e8f0;
-            --gold:     #b45309;
-            --gold-bg:  #fef3c7;
-            --gold-b:   #fde68a;
-            --navy:     #1e3a8a;
-            --navy-lt:  #eff6ff;
+            --bg-page:  #F5F0E8;
+            --bg-card:  #FFFDF8;
+            --bg-muted: #E8DDD0;
+            --border:   #D9C9B8;
+            --gold:     #D4AF6A;
+            --gold-bg:  #F5ECD8;
+            --gold-b:   #d4af6a;
+            --navy:     #800020;
+            --navy-lt:  #5c0017;
             --success:  #059669;
             --warning:  #d97706;
             --danger:   #dc2626;
-            --text-h:   #0f172a;
-            --text-b:   #334155;
-            --text-m:   #64748b;
+            --text-h:   #2C0A12;
+            --text-b:   #3d0f1b;
+            --text-m:   #7A5C62;
             --font:     'Plus Jakarta Sans', sans-serif;
             --mono:     'JetBrains Mono', monospace;
             --radius:   16px;
@@ -46,11 +46,13 @@
         }
         .logo-row { display:flex; align-items:center; gap:.75rem; text-decoration:none; }
         .logo-sq {
-            width:2.25rem; height:2.25rem; border-radius:9px;
-            background:rgba(252,211,77,.15); border:1.5px solid rgba(252,211,77,.3);
+            width:3rem; height:3rem; border-radius:50%;
+            background:#F5F0E8; border:2px solid #D4AF6A;
             display:flex; align-items:center; justify-content:center;
-            font-weight:900; font-size:1rem; color:#fcd34d;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(212,175,106,0.3);
         }
+        .logo-sq img { width: 90%; height: 90%; object-fit: contain; }
         .logo-name { font-size:1.05rem; font-weight:800; color:#fff; }
         .logo-sub  { font-size:.62rem; color:rgba(255,255,255,.5); font-weight:500; }
         .header-right { display:flex; align-items:center; gap:.75rem; }
@@ -120,6 +122,36 @@
         .breach-txt { display:flex; align-items:center; gap:.6rem; color:var(--danger); font-weight:700; font-size:.85rem; }
         .breach-count { background:var(--danger); color:#fff; width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:800; }
 
+        /* HEAT MAP */
+        .heat-map-card {
+            background: linear-gradient(135deg, #0f172a 0%, #111827 100%);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 20px;
+            padding: 1.25rem 1.25rem 1rem;
+            box-shadow: 0 18px 45px rgba(15,23,42,.18);
+        }
+        .heat-map-head {
+            display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1rem;
+        }
+        .heat-map-title {
+            font-size:1rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:.55rem;
+        }
+        .heat-map-sub {
+            margin-top:.25rem; font-size:.76rem; color:#94a3b8;
+        }
+        .heat-pill {
+            background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.2); color:#86efac; padding:.35rem .7rem; border-radius:999px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.16em;
+        }
+        .heat-map-canvas {
+            border-radius: 16px; overflow:hidden; border:1px solid rgba(255,255,255,.08); background: radial-gradient(circle at top left, #1e293b, #020617 72%);
+        }
+        .heat-map-card { position: relative; }
+        .heat-hero-img { position: absolute; right: 1rem; top: 1rem; width: 36%; max-width: 420px; opacity: 0.12; pointer-events: none; border-radius: 12px; filter: saturate(.9) contrast(.9); }
+        .heat-map-legend {
+            display:flex; flex-wrap:wrap; gap:.75rem; margin-top:.7rem; font-size:.72rem; color:#cbd5e1; text-transform:uppercase; letter-spacing:.18em;
+        }
+        .legend-dot { width:.7rem; height:.7rem; border-radius:999px; display:inline-block; margin-right:.3rem; }
+
         /* TABLE */
         .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
         table { width:100%; border-collapse:collapse; font-size:.83rem; }
@@ -174,10 +206,12 @@
 <body>
     <header>
         <div class="logo-row">
-            <div class="logo-sq">B</div>
+            <div class="logo-sq">
+                <img src="/static/bou-logo.png" alt="BoU Logo" />
+            </div>
             <div>
-                <div class="logo-name">Bank of Uganda</div>
-                <div class="logo-sub">Consumer Protection Supervisory Board</div>
+                <div class="logo-name">BANK OF UGANDA</div>
+                <div class="logo-sub">Consumer Protection & Fraud Intelligence Hub</div>
             </div>
         </div>
         <div class="header-right">
@@ -218,6 +252,32 @@
                     <div class="stat-val" id="stat-breached">—</div>
                     <div class="stat-lbl">SLA Breached</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- HEAT MAP -->
+        <div class="heat-map-card">
+            <div class="heat-map-head">
+                <div>
+                    <div class="heat-map-title">
+                        <i data-lucide="flame" style="width:16px;height:16px;color:#f59e0b;"></i>
+                        Fraud Heat Map
+                    </div>
+                    <div class="heat-map-sub">Live district-level fraud complaint concentration across Uganda.</div>
+                </div>
+                <div class="heat-pill">Priority view</div>
+            </div>
+            <div class="heat-map-canvas">
+                <svg id="uganda-heat-map" viewBox="0 0 100 100" style="width:100%; height:320px; display:block;"></svg>
+            </div>
+            <div class="heat-map-legend">
+                <span><span class="legend-dot" style="background:#60a5fa"></span> Lower</span>
+                <span><span class="legend-dot" style="background:#fb923c"></span> Medium</span>
+                <span><span class="legend-dot" style="background:#f43f5e"></span> High</span>
+            </div>
+            <!-- Optional static banner image: place file at api/static/images/heatmap-banner.png -->
+            <div>
+                <img src="/static/images/heatmap-banner.png" alt="Fraud heatmap banner" loading="lazy" width="420">
             </div>
         </div>
 
@@ -493,9 +553,76 @@
                 const stats = await statsR.json();
                 const cases = await casesR.json();
                 renderStats(stats, cases);
+                renderHeatMap(cases);
                 renderTable(cases);
                 renderMap(cases);
             } catch(e) { console.error(e); }
+        }
+
+        function buildHeatMapData(cases) {
+            const districts = {};
+            cases.forEach((caseItem) => {
+                const district = caseItem.district || 'Other';
+                if (!districts[district]) {
+                    districts[district] = { district, count: 0, totalLoss: 0, escalated: 0 };
+                }
+                districts[district].count += 1;
+                districts[district].totalLoss += Number(caseItem.amount || 0);
+                if (caseItem.escalated) districts[district].escalated += 1;
+            });
+
+            return Object.values(districts)
+                .map((entry) => ({
+                    ...entry,
+                    intensity: Math.min(100, Math.round((entry.totalLoss / 1000000) * 20 + entry.count * 10 + entry.escalated * 15))
+                }))
+                .sort((a, b) => b.intensity - a.intensity)
+                .slice(0, 8);
+        }
+
+        function renderHeatMap(cases) {
+            const districtPositions = {
+                Kampala: { x: 68, y: 54 },
+                Gulu: { x: 70, y: 24 },
+                Masaka: { x: 56, y: 66 },
+                Mbarara: { x: 36, y: 58 },
+                Jinja: { x: 74, y: 66 },
+                Mbale: { x: 78, y: 42 },
+                Lira: { x: 64, y: 24 },
+                Hoima: { x: 46, y: 34 },
+                Arua: { x: 22, y: 16 },
+                FortPortal: { x: 40, y: 46 },
+                Soroti: { x: 74, y: 36 },
+                Kasese: { x: 22, y: 58 }
+            };
+
+            const svg = document.getElementById('uganda-heat-map');
+            const data = buildHeatMapData(cases);
+            if (!svg) return;
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="mapGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1e293b" />
+                        <stop offset="100%" stop-color="#020617" />
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="100" height="100" fill="url(#mapGlow)" />
+                <path d="M13 24L24 18L37 22L43 15L54 19L60 14L69 15L77 23L84 29L82 41L76 48L79 57L71 64L69 74L62 80L52 78L45 84L35 82L28 76L20 74L15 69L12 56L14 47L12 36Z" fill="#0f172a" stroke="#334155" stroke-width="0.8" stroke-linejoin="round" />
+                ${data.map((entry) => {
+                    const position = districtPositions[entry.district] || { x: 50, y: 50 };
+                    const radius = Math.max(2.8, Math.min(7.2, 2.8 + entry.intensity / 12));
+                    const color = entry.intensity > 70 ? '#f43f5e' : entry.intensity > 45 ? '#fb923c' : '#60a5fa';
+                    const opacity = Math.max(0.35, Math.min(0.95, 0.35 + entry.intensity / 100));
+                    return `
+                        <g>
+                            <circle cx="${position.x}" cy="${position.y}" r="${radius + 1.2}" fill="${color}" fill-opacity="0.14" />
+                            <circle cx="${position.x}" cy="${position.y}" r="${radius}" fill="${color}" fill-opacity="${opacity}" />
+                            <circle cx="${position.x}" cy="${position.y}" r="${Math.max(1.15, radius * 0.35)}" fill="#f8fafc" fill-opacity="0.95" />
+                            <text x="${position.x + 2.2}" y="${position.y - 3.5}" font-size="2.6" fill="#e2e8f0" font-weight="600">${entry.district}</text>
+                        </g>`;
+                }).join('')}
+            `;
         }
 
         function renderStats(s, cases) {
@@ -582,6 +709,26 @@
 
         loadData();
         setInterval(loadData, 30000);
+        // Attempt to load optional hero image into the heat map card.
+        (function(){
+            try {
+                const imgPath = '/static/images/heatmap-banner.png';
+                const img = new Image();
+                img.className = 'heat-hero-img';
+                img.onload = function(){
+                    const container = document.querySelector('.heat-map-canvas');
+                    if (!container) return;
+                    // Ensure container can host absolutely-positioned image
+                    container.style.position = container.style.position || 'relative';
+                    container.appendChild(img);
+                };
+                img.onerror = function(){
+                    // No-op: keep svg-only view and avoid broken image icons
+                    console.info('Optional heatmap banner not found at ' + imgPath);
+                };
+                img.src = imgPath;
+            } catch (e) { console.warn('Failed to attach heatmap banner', e); }
+        })();
     </script>
 </body>
 </html>
