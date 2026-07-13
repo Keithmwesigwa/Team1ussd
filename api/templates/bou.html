@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
         :root {
             --bg-page:  #f1f5f9;
@@ -350,23 +351,19 @@
             'Mukono':   [0.3533, 32.7553]
         };
 
-        // One layerGroup holds ALL heat rings + popup triggers
-        const heatGroup = L.layerGroup().addTo(map);
+        // ── Heat-map state ────────────────────────────────────────────────────
+        let   heatLayer    = null;   // leaflet.heat canvas layer
+        let   popupGroup   = L.layerGroup().addTo(map); // circleMarker popup triggers
+        let   _lastCases   = [];     // cache so we can redraw on zoom without re-fetching
 
-        // Concentric ring definitions: outermost → innermost
-        // Each ring has a scale (fraction of base radius) and a fill colour/opacity.
-        // Overlapping transparent fills create a smooth gradient illusion.
-        const RINGS = [
-            { scale: 1.00, color: '#00c853', op: 0.06 },  // outermost – soft green
-            { scale: 0.80, color: '#76ff03', op: 0.09 },
-            { scale: 0.62, color: '#ffd600', op: 0.13 },  // yellow mid
-            { scale: 0.45, color: '#ff6d00', op: 0.20 },  // orange
-            { scale: 0.28, color: '#e53935', op: 0.32 },  // red
-            { scale: 0.14, color: '#b71c1c', op: 0.48 }   // innermost – deep red core
-        ];
+        // Golden-angle constant (137.508°) – produces a natural sunflower spiral,
+        // deterministic (same output every call) and non-circular.
+        const GOLDEN = 2.39996323;
 
-        function renderMap(cases) {
-            // Tally complaints per tracked district
+        // Build the raw [lat, lng, intensity] array that leaflet.heat consumes.
+        // Each city gets a dense spiral of weighted points that fans out from its
+        // centre, making the blob look organic rather than a perfect disc.
+        function buildHeatPoints(cases) {
             const counts = {};
             Object.keys(coordinates).forEach(k => counts[k] = 0);
             cases.forEach(c => {
@@ -375,50 +372,102 @@
             });
 
             const maxCount = Math.max(...Object.values(counts), 1);
-            heatGroup.clearLayers();
+            const pts = [];
+
+            Object.entries(coordinates).forEach(([city, [lat, lng]]) => {
+                const count = counts[city];
+                if (count === 0) return;
+
+                const intensity = count / maxCount;          // 0 < intensity ≤ 1
+                // Spread radius in degrees: ~8 km at low end, ~18 km at high end
+                const maxSpread = 0.08 + intensity * 0.10;
+                // Number of spiral arms: more complaints → denser, wider cloud
+                const N = Math.min(8 + Math.ceil(count * 5), 60);
+
+                // Centre point always at full intensity
+                pts.push([lat, lng, intensity]);
+
+                // Sunflower / Vogel spiral – each point placed at a
+                // deterministic angle and distance from the centre
+                for (let i = 1; i <= N; i++) {
+                    const angle = i * GOLDEN;
+                    const dist  = maxSpread * Math.sqrt(i / N);  // even area distribution
+                    const fade  = intensity * (1 - (i / N) * 0.65); // intensity falls off gently
+                    pts.push([
+                        lat + dist * Math.sin(angle),
+                        lng + dist * Math.cos(angle),
+                        Math.max(fade, 0.05)
+                    ]);
+                }
+            });
+
+            return { pts, counts, maxCount };
+        }
+
+        // Redraw the heat layer (called on first load AND every zoomend so the
+        // canvas stays perfectly registered with the tile layer at every zoom level).
+        function redrawHeat() {
+            if (_lastCases.length === 0) return;
+
+            const zoom = map.getZoom();
+            // Scale radius & blur with zoom so blobs don't shrink/grow unexpectedly
+            const radius = Math.round(18 + (zoom - 7) * 6);   // 18px at z7 → 54px at z13
+            const blur   = Math.round(14 + (zoom - 7) * 4);   // 14px at z7 → 38px at z13
+
+            const { pts } = buildHeatPoints(_lastCases);
+
+            if (heatLayer) map.removeLayer(heatLayer);
+            heatLayer = L.heatLayer(pts, {
+                radius,
+                blur,
+                maxZoom : 14,
+                max     : 1.0,
+                minOpacity: 0.25,
+                gradient: {
+                    0.00 : '#00c853',   // green  – sparse
+                    0.30 : '#aeea00',   // lime
+                    0.50 : '#ffd600',   // yellow – moderate
+                    0.70 : '#ff6d00',   // orange
+                    1.00 : '#d50000'    // red    – hotspot
+                }
+            }).addTo(map);
+        }
+
+        // Re-register heat layer on every zoom so it never floats free
+        map.on('zoomend', redrawHeat);
+
+        function renderMap(cases) {
+            _lastCases = cases;
+
+            // Tally for legend + popup markers
+            const { counts } = buildHeatPoints(cases);
+            const maxCount = Math.max(...Object.values(counts), 1);
+
+            // Remove previous popup markers
+            popupGroup.clearLayers();
 
             let highZones = 0, mediumZones = 0, lowZones = 0;
 
             Object.entries(coordinates).forEach(([city, coords]) => {
                 const count = counts[city];
 
-                // Classify zone (even zero-count cities count toward legend totals)
                 let tier, tierColor;
-                if (count >= 15)     { tier = 'HIGH';   tierColor = '#e53935'; highZones++; }
+                if (count >= 15)     { tier = 'HIGH';   tierColor = '#d50000'; highZones++; }
                 else if (count >= 5) { tier = 'MEDIUM'; tierColor = '#ff6d00'; mediumZones++; }
                 else                 { tier = 'LOW';    tierColor = '#43a047'; lowZones++; }
 
-                // Skip drawing heat blob for cities with zero reports
-                if (count === 0) return;
+                if (count === 0) return; // no marker for zero-report cities
 
-                const intensity = count / maxCount; // 0 < intensity <= 1
-
-                // Base radius: 18 km minimum, grows to ~75 km at max count
-                const baseRadius = 18000 + intensity * 57000;
-
-                // Draw rings from outermost inward so later rings paint over earlier
-                RINGS.forEach(({ scale, color, op }) => {
-                    L.circle(coords, {
-                        radius      : baseRadius * scale,
-                        color       : 'none',          // no stroke border
-                        weight      : 0,
-                        fillColor   : color,
-                        // Scale opacity by intensity so low-count cities appear fainter
-                        fillOpacity : op * (0.4 + intensity * 0.6),
-                        interactive : false,           // clicks pass through to popup marker
-                        bubblingMouseEvents: false
-                    }).addTo(heatGroup);
-                });
-
-                // Small solid dot (6 px) acts as popup trigger; no extra decorative dots
+                // Small pin – click to see detail; does NOT add visual noise
                 L.circleMarker(coords, {
-                    radius      : 6,
+                    radius      : 5,
                     color       : '#fff',
-                    weight      : 2,
+                    weight      : 1.5,
                     fillColor   : tierColor,
-                    fillOpacity : 1
+                    fillOpacity : 1,
+                    pane        : 'markerPane'   // renders above the heat canvas
                 })
-                .addTo(heatGroup)
+                .addTo(popupGroup)
                 .bindPopup(`
                     <b style="font-size:13px">${city}</b><br>
                     <span style="color:${tierColor};font-weight:600">${tier} RISK</span><br>
@@ -426,7 +475,10 @@
                 `);
             });
 
-            // Update legend zone counts
+            // Draw (or redraw) the heat canvas
+            redrawHeat();
+
+            // Update legend
             document.getElementById('legend-high').textContent   = `${highZones} zone${highZones   !== 1 ? 's' : ''}`;
             document.getElementById('legend-medium').textContent = `${mediumZones} zone${mediumZones !== 1 ? 's' : ''}`;
             document.getElementById('legend-low').textContent    = `${lowZones} zone${lowZones     !== 1 ? 's' : ''}`;
