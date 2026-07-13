@@ -71,7 +71,7 @@ translation_matrix = {
         'ivr_redirect':     "Thank you. Your fraud incident under {provider} has been filed. The Bank of Uganda platform is calling you back right now to record your voice complaint. Please answer.",
         'ivr_switch':       "Connecting you to a fraud reporting voice call. Please answer your phone.",
         'status_redirect':  "Fetching status. You will receive an automated voice update call shortly.",
-        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: A detailed report will be sent to you shortly.",
+        'active_case':      "Case {id} | Status: {status}\nA detailed SMS has been sent to your number.",
         'no_case':          "No active complaints found for your phone number ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Invalid selection. Please try again.",
@@ -86,7 +86,7 @@ translation_matrix = {
         'ivr_redirect':     "Weebale. Omusango gwo ogw'obufere ku {provider} guwandiikiddwa. Banka enkulu eya Uganda (BoU) ekukubira essimu kaakano osodole okukwata eddoboozi lyo ery'okwemulugunya.",
         'ivr_switch':       "Tukukubirira essimu gy'okwemulugunya. Teeka essimu.",
         'status_redirect':  "Tukyakunonyeza omusango. Ojja kufuna essimu ekuwa ebirowoozo kaakano.",
-        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: Omusango gwo gutekebwako ripoota eijjuvu mu bwangu.",
+        'active_case':      "Omusango {id} | Okugenda: {status}\nSMS ey'obutereevu etumibwa ku ssimu yo.",
         'no_case':          "Active Case: Tewali musango gwonna ogusangiddwa ku ssimu yo ({phone}).",
         'lang_select':      "Londa Ennimi / Choose Language:",
         'invalid':          "Okoze ensobi. Kyeyongere okugezaako.",
@@ -101,7 +101,7 @@ translation_matrix = {
         'ivr_redirect':     "Webare. Omusango gwawe gw'okwiba ahari {provider} gwahandiikwa. Banka enkulu eya Uganda ekuteerera esimu hati ngu okwate eiraka ryawe ry'okwemurugunya.",
         'ivr_switch':       "Tukuteererera esimu y'okwemurugunya. Gwata esimu yawe.",
         'status_redirect':  "Tukyaserura omusango gwawe. Noza kutunga esimu ekumanyisa hati.",
-        'active_case':      "Active Case ({id}) Status: {status}.\nInfo: Ripoota ejwire neza kukoherwa hati.",
+        'active_case':      "Omusango {id} | Ekyerekezo: {status}\nSMS ejwire ekutumiirwe ahari esimu yawe.",
         'no_case':          "Active Case: Tihariho musango gw'okwiba ogusangirwe ahari esimu yawe ({phone}).",
         'lang_select':      "Toorana Orurimi / Choose Language:",
         'invalid':          "Okora enshobi. Yegarukemu.",
@@ -385,15 +385,14 @@ def ussd():
 
     # BRANCH 2: TRACK STATUS
     elif text == '2':
-        # Lookup database for active complaints associated with this phone number
-        all_cases = get_all_complaints()
+        all_cases  = get_all_complaints()
         user_cases = [c for c in all_cases if c['phone_number'] == phone_number]
-        
-        if len(user_cases) > 0:
-            # Show status of the most recent complaint
-            latest = user_cases[0]
+
+        if user_cases:
+            latest = user_cases[0]   # most recent complaint
+
             status_map = {
-                'PENDING':             'Pending',
+                'PENDING':             'Pending – awaiting review',
                 'UNDER_INVESTIGATION': 'Under Investigation',
                 'RESOLVED':            'Resolved',
                 'CANCELED':            'Canceled',
@@ -401,15 +400,57 @@ def ussd():
                 'ESCALATED':           'Escalated to BoU',
             }
             status_clean = status_map.get(latest['status'].upper(), latest['status'])
+
+            # ── Rich SMS body (sent in the user's chosen language) ────────────
+            notes_line = latest.get('notes') or 'No additional notes.'
+            sla_raw    = latest.get('sla_deadline', '')
+            try:
+                from datetime import datetime
+                sla_dt   = datetime.fromisoformat(sla_raw)
+                sla_str  = sla_dt.strftime('%d %b %Y %H:%M')
+            except Exception:
+                sla_str  = sla_raw or 'N/A'
+
+            if current_lang == 'lg':
+                sms_body = (
+                    f"BoU FraudGuard – Ebirowoozo bya Omusango\n"
+                    f"Omusango: {latest['id']}\n"
+                    f"Okugenda: {status_clean}\n"
+                    f"Gavumenti: {latest.get('provider', 'N/A')}\n"
+                    f"Ebiwandiiko: {notes_line}\n"
+                    f"Obudde bw'okutuukiriza: {sla_str}\n"
+                    f"Okubuuza: 0800-201-012 (efo)"
+                )
+            elif current_lang == 'rny':
+                sms_body = (
+                    f"BoU FraudGuard – Ebirikukwata Omusango\n"
+                    f"Omusango: {latest['id']}\n"
+                    f"Ekyerekezo: {status_clean}\n"
+                    f"Orwego: {latest.get('provider', 'N/A')}\n"
+                    f"Ebihandiike: {notes_line}\n"
+                    f"Obusingye bw'okugwizaho: {sla_str}\n"
+                    f"Obuuza: 0800-201-012 (efo)"
+                )
+            else:  # English (default)
+                sms_body = (
+                    f"BoU FraudGuard – Case Status Update\n"
+                    f"Case ID  : {latest['id']}\n"
+                    f"Status   : {status_clean}\n"
+                    f"Provider : {latest.get('provider', 'N/A')}\n"
+                    f"Notes    : {notes_line}\n"
+                    f"SLA Due  : {sla_str}\n"
+                    f"Helpline : 0800-201-012 (toll-free)"
+                )
+
+            # Fire SMS – works with real AT creds or prints to console in dev
+            send_sms(phone_number, sms_body)
+
+            # USSD END screen – confirm SMS was sent
             response = f"END {t['active_case'].format(id=latest['id'], status=status_clean)}"
-            
-            # Send simulated detailed SMS report
-            sms_text = f"FraudGuard Detailed Report: Your case {latest['id']} status is {status_clean}. Notes: {latest['notes']}. SLA: {latest['sla_deadline']}."
-            send_sms(phone_number, sms_text)
+
         else:
             response = f"END {t['no_case'].format(phone=phone_number)}"
-            
-        trigger_status_callback_call(phone_number, current_lang)
+            # No SMS sent when there is no matching case
 
     # BRANCH 3: LANGUAGE MENU
     elif text == '3':
