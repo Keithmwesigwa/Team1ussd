@@ -133,6 +133,7 @@
         .badge-invest   { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
         .badge-resolved { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
         .badge-escalated{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .badge-canceled { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; }
         .badge-telecoma { background:#fef9c3; color:#92400e; }
         .badge-telecomb { background:#fee2e2; color:#991b1b; }
 
@@ -331,9 +332,9 @@
         }
 
         function statusBadge(s) {
-            const map = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved' };
-            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved' };
-            return `<span class="badge ${map[s]||''}">${labels[s]||s}</span>`;
+            const map = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved', CANCELED:'badge-canceled', ESCALATED:'badge-escalated' };
+            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved', CANCELED:'Canceled', ESCALATED:'Escalated' };
+            return `<span class="badge ${map[s]||'badge-pending'}">${labels[s]||s}</span>`;
         }
 
         function renderTable(cases) {

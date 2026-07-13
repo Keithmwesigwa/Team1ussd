@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import requests as http_requests
 from flask import (Flask, request, render_template, make_response,
                    redirect, url_for, session, jsonify)
 
@@ -387,14 +388,14 @@ def ussd():
             # Show status of the most recent complaint
             latest = user_cases[0]
             status_map = {
-                'PENDING': 'pending',
-                'UNDER_INVESTIGATION': 'pending',
-                'RESOLVED': 'Resolved',
-                'CANCELLED': 'canceled',
-                'CANCELED': 'canceled',
-                'ESCALATED': 'pending'
+                'PENDING':             'Pending',
+                'UNDER_INVESTIGATION': 'Under Investigation',
+                'RESOLVED':            'Resolved',
+                'CANCELED':            'Canceled',
+                'CANCELLED':           'Canceled',
+                'ESCALATED':           'Escalated to BoU',
             }
-            status_clean = status_map.get(latest['status'].upper(), 'pending')
+            status_clean = status_map.get(latest['status'].upper(), latest['status'])
             response = f"END {t['active_case'].format(id=latest['id'], status=status_clean)}"
             
             # Send simulated detailed SMS report
@@ -475,14 +476,67 @@ def voice_capture_callback():
 # MOCK MICROSERVICE HOOKS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def trigger_outbound_ivr(phone, provider, lang):
-    print(f"[IVR] Dialling {phone} for {provider} complaint (lang={lang})")
+# ─── Africa's Talking helpers ────────────────────────────────────────────────
+AT_USERNAME = os.environ.get('AT_USERNAME', '')
+AT_API_KEY  = os.environ.get('AT_API_KEY', '')
+AT_SMS_URL  = 'https://api.africastalking.com/version1/messaging'
+AT_CALL_URL = 'https://voice.africastalking.com/call'
 
-def trigger_status_callback_call(phone, lang):
-    print(f"[IVR] Status callback queued for {phone} (lang={lang})")
 
 def send_sms(phone, message):
-    print(f"[SMS] Sent SMS to {phone}: {message}")
+    """Send SMS via Africa's Talking. Falls back to print if creds not set."""
+    if not AT_USERNAME or not AT_API_KEY:
+        print(f"[SMS-MOCK] To {phone}: {message}")
+        return
+    try:
+        resp = http_requests.post(
+            AT_SMS_URL,
+            headers={
+                'apiKey': AT_API_KEY,
+                'Accept': 'application/json',
+            },
+            data={
+                'username': AT_USERNAME,
+                'to':       phone,
+                'message':  message,
+            },
+            timeout=10
+        )
+        result = resp.json()
+        print(f"[SMS] Sent to {phone}: {result}")
+    except Exception as e:
+        print(f"[SMS-ERROR] Failed to send to {phone}: {e}")
+
+
+def trigger_outbound_ivr(phone, provider, lang):
+    """Place an outbound call via Africa's Talking Voice API."""
+    if not AT_USERNAME or not AT_API_KEY:
+        print(f"[CALL-MOCK] Dialling {phone} for {provider} (lang={lang})")
+        return
+    try:
+        callback_url = os.environ.get(
+            'AT_VOICE_CALLBACK_URL',
+            'https://your-app.vercel.app/voice-outbound'
+        )
+        resp = http_requests.post(
+            AT_CALL_URL,
+            headers={'apiKey': AT_API_KEY},
+            data={
+                'username': AT_USERNAME,
+                'to':       phone,
+                'from':     os.environ.get('AT_CALLER_ID', ''),
+                'callbackUrl': callback_url,
+            },
+            timeout=10
+        )
+        print(f"[CALL] Initiated call to {phone}: {resp.text}")
+    except Exception as e:
+        print(f"[CALL-ERROR] Failed to call {phone}: {e}")
+
+
+def trigger_status_callback_call(phone, lang):
+    """Place a status-update callback call."""
+    trigger_outbound_ivr(phone, 'Status Update', lang)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

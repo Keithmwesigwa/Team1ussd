@@ -154,6 +154,7 @@
         .badge-invest   { background:#ede9fe; color:#4338ca; border:1px solid #c4b5fd; }
         .badge-resolved { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
         .badge-escalated{ background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .badge-canceled { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; }
 
         /* SLA countdown */
         .sla-ok  { color:var(--success); font-weight:700; }
@@ -256,6 +257,8 @@
                 <div class="filter-chip" id="f-PENDING" onclick="applyFilter('PENDING')">Pending</div>
                 <div class="filter-chip" id="f-UNDER_INVESTIGATION" onclick="applyFilter('UNDER_INVESTIGATION')">Investigating</div>
                 <div class="filter-chip" id="f-RESOLVED" onclick="applyFilter('RESOLVED')">Resolved</div>
+                <div class="filter-chip" id="f-CANCELED" onclick="applyFilter('CANCELED')">Canceled</div>
+                <div class="filter-chip" id="f-ESCALATED" onclick="applyFilter('ESCALATED')">Escalated</div>
             </div>
 
             <div class="table-wrap">
@@ -293,6 +296,8 @@
                     <option value="PENDING">Pending</option>
                     <option value="UNDER_INVESTIGATION">Under Investigation</option>
                     <option value="RESOLVED">Resolved</option>
+                    <option value="CANCELED">Canceled</option>
+                    <option value="ESCALATED">Escalated to BoU</option>
                 </select>
             </div>
             <div class="fg">
@@ -357,10 +362,10 @@
         }
 
         function statusBadge(s, escalated) {
-            if (escalated === 1) return `<span class="badge badge-escalated"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> Escalated</span>`;
-            const map = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved' };
-            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved' };
-            return `<span class="badge ${map[s] || ''}">${labels[s] || s}</span>`;
+            if (escalated === 1 || s === 'ESCALATED') return `<span class="badge badge-escalated"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> Escalated</span>`;
+            const map    = { PENDING:'badge-pending', UNDER_INVESTIGATION:'badge-invest', RESOLVED:'badge-resolved', CANCELED:'badge-canceled' };
+            const labels = { PENDING:'Pending', UNDER_INVESTIGATION:'Investigating', RESOLVED:'Resolved', CANCELED:'Canceled' };
+            return `<span class="badge ${map[s] || 'badge-pending'}">${labels[s] || s}</span>`;
         }
 
         function renderTable(cases) {
