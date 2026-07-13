@@ -164,8 +164,49 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      
+
+      {/* HEADER: Bank of Uganda Branding Bar */}
+      <div className="rounded-2xl overflow-hidden shadow-lg border border-[#6B0017]"
+        style={{ background: 'linear-gradient(135deg, #800020 0%, #5c0017 60%, #3d000f 100%)' }}>
+        <div className="flex items-center justify-between px-6 py-4">
+          {/* Left: Logo + Name */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[#F5F0E8] border-2 border-[#D4AF6A] flex items-center justify-center shadow-[0_0_20px_rgba(212,175,106,0.4)] overflow-hidden flex-shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/bou-logo.png" alt="Bank of Uganda Coat of Arms" className="w-full h-full object-contain p-1" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-[#F5F0E8] tracking-wide leading-tight">BANK OF UGANDA</h1>
+              <p className="text-[11px] font-semibold text-[#D4AF6A] tracking-widest uppercase mt-0.5">Consumer Protection &amp; Fraud Intelligence Hub</p>
+            </div>
+          </div>
+
+          {/* Center: Decorative divider */}
+          <div className="hidden lg:flex items-center gap-3 mx-6">
+            <div className="h-px w-20 bg-gradient-to-r from-transparent to-[#D4AF6A]/50" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF6A]" />
+            <div className="h-px w-20 bg-gradient-to-l from-transparent to-[#D4AF6A]/50" />
+          </div>
+
+          {/* Right: Live status + date */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-[#F5F0E8]/10 border border-[#D4AF6A]/30 rounded-full px-4 py-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
+              <span className="text-[11px] font-bold text-[#F5F0E8] uppercase tracking-widest">System Online</span>
+            </div>
+            <div className="hidden md:block text-right">
+              <p className="text-[10px] text-[#D4AF6A] font-semibold uppercase tracking-wider">Real-Time</p>
+              <p className="text-xs text-[#F5F0E8] font-bold">{new Date().toLocaleDateString('en-UG', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom accent strip */}
+        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #D4AF6A, #F5F0E8, #D4AF6A)' }} />
+      </div>
+
       {/* SECTION 1: MACRO REGULATORY ANALYTICS GRID */}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         
         {/* Metric Card 1: Total Loss */}
@@ -334,68 +375,216 @@ export default function BoUDashboard({ complaints, auditLogs, onRefresh }: BoUDa
           </div>
         </div>
 
-        {/* Right Canvas: Radar Map Canvas */}
-        <div className="w-full lg:w-2/3 relative bg-[#D4F0D4] overflow-hidden flex items-center justify-center h-full min-h-[400px]">
+        {/* Right Canvas: Uganda Map */}
+        <div className="w-full lg:w-2/3 relative overflow-hidden h-full min-h-[400px]" style={{ background: 'linear-gradient(145deg, #1a2a3a 0%, #0d1b2a 100%)' }}>
           
-          {/* Map Canvas Background - Uganda Silhouette without text */}
-          <div className="absolute inset-0 opacity-50 flex items-center justify-center pointer-events-none">
-            <svg viewBox="0 0 100 100" className="w-[80%] h-[80%]" fill="#BEE3F8" stroke="#90CDF4" strokeWidth="0.5" strokeLinejoin="round">
-               {/* Simplified Uganda Country Outline */}
-               <path d="M45,10 C50,12 55,10 60,15 C65,20 70,25 72,30 C75,35 80,45 85,55 C88,60 85,65 80,70 C75,75 70,85 60,90 C50,95 40,90 30,85 C20,80 15,75 10,65 C5,55 10,45 15,35 C20,25 25,20 30,15 C35,10 40,8 45,10 Z" fill="#C6F6D5" stroke="#9AE6B4" strokeWidth="0.8"/>
-               {/* Internal Abstract District/Region lines */}
-               <path d="M30,15 L40,40 L20,50 L15,35" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               <path d="M40,40 L60,35 L72,30" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               <path d="M60,35 L65,55 L85,55" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               <path d="M40,40 L50,65 L65,55" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               <path d="M20,50 L35,70 L50,65" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               <path d="M35,70 L50,90 L60,90" fill="none" stroke="#9AE6B4" strokeWidth="0.5"/>
-               {/* Lake Victoria Simulation */}
-               <path d="M65,70 C70,68 75,70 80,70 C85,75 80,85 75,85 C70,85 65,80 65,70 Z" fill="#93C5FD" stroke="none"/>
-               {/* Lake Albert Simulation */}
-               <path d="M12,40 C15,35 20,40 18,48 C15,55 10,50 12,40 Z" fill="#93C5FD" stroke="none"/>
+          {/* Subtle grid overlay for professional feel */}
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: 'linear-gradient(rgba(96,165,250,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.3) 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }} />
+
+          {/* Uganda SVG Map - Clean, no labels */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg
+              viewBox="0 0 500 560"
+              className="w-[85%] h-[85%] drop-shadow-2xl"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Outer glow filter */}
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <filter id="haltGlow">
+                  <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <radialGradient id="districtGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#1e3a5f" />
+                  <stop offset="100%" stopColor="#0f2540" />
+                </radialGradient>
+                <radialGradient id="lakeGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#1e4d8c" />
+                  <stop offset="100%" stopColor="#0a2d5e" />
+                </radialGradient>
+              </defs>
+
+              {/* === UGANDA COUNTRY OUTLINE === */}
+              {/* Northern Region */}
+              <path d="M120,30 L180,20 L240,25 L290,30 L330,50 L340,80 L320,100 L280,110 L240,105 L200,110 L160,100 L130,80 L110,60 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+              {/* Gulu District (North) */}
+              <path d="M130,30 L200,20 L240,25 L240,65 L200,70 L160,65 L130,50 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+              {/* Arua/West Nile */}
+              <path d="M60,30 L130,30 L130,80 L100,95 L60,85 L40,60 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* Central Region */}
+              <path d="M160,100 L200,110 L240,105 L280,110 L300,140 L290,180 L260,210 L230,220 L200,215 L170,210 L150,180 L140,150 L145,120 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+              {/* Kampala District - highlighted slightly */}
+              <path d="M210,145 L245,140 L255,165 L245,185 L215,190 L200,170 L200,150 Z"
+                fill="#122b45" stroke="#4a90d9" strokeWidth="1.5" />
+              {/* Wakiso */}
+              <path d="M170,155 L210,145 L200,170 L200,215 L170,210 L155,185 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+              {/* Mukono/Jinja */}
+              <path d="M255,165 L290,155 L310,180 L295,210 L260,210 L245,185 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* Eastern Region */}
+              <path d="M290,110 L360,90 L400,110 L420,150 L410,190 L380,220 L340,230 L300,215 L290,180 L300,140 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+              {/* Mbale */}
+              <path d="M340,100 L390,110 L395,145 L360,155 L325,140 L320,115 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* Western Region */}
+              <path d="M110,180 L150,180 L170,210 L165,260 L150,300 L120,320 L85,305 L70,270 L75,230 L95,200 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+              {/* Mbarara */}
+              <path d="M115,260 L155,250 L165,280 L150,310 L115,315 L95,290 L100,265 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+              {/* Kasese */}
+              <path d="M70,210 L110,200 L115,260 L95,275 L65,260 L55,230 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* South/Masaka */}
+              <path d="M170,250 L215,240 L245,255 L250,300 L230,340 L195,355 L165,340 L150,310 L155,270 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+              {/* Masaka */}
+              <path d="M175,275 L215,268 L220,305 L200,330 L175,325 L160,300 L165,278 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* South-East / Rakai */}
+              <path d="M245,255 L295,250 L315,280 L305,330 L275,355 L240,350 L225,325 L230,290 Z"
+                fill="url(#districtGrad)" stroke="#2d6a9f" strokeWidth="1.5" />
+
+              {/* South central near Lake Victoria coast */}
+              <path d="M215,340 L255,335 L270,370 L250,400 L220,405 L200,380 L205,355 Z"
+                fill="#0f2d4a" stroke="#3b82b6" strokeWidth="1" />
+
+              {/* === LAKE VICTORIA (Southeast) === */}
+              <path d="M275,360 C310,345 360,350 390,370 C420,395 425,440 410,470 C390,500 355,515 320,510 C285,505 260,490 250,465 C238,440 245,375 275,360 Z"
+                fill="url(#lakeGrad)" stroke="#1e4d8c" strokeWidth="2" opacity="0.9" />
+
+              {/* === LAKE ALBERT (Northwest) === */}
+              <path d="M30,120 C25,140 28,175 40,195 C52,215 70,218 80,205 C90,192 88,165 78,145 C68,125 42,108 30,120 Z"
+                fill="url(#lakeGrad)" stroke="#1e4d8c" strokeWidth="2" opacity="0.9" />
+
+              {/* === LAKE EDWARD (Southwest) === */}
+              <path d="M55,295 C45,310 45,340 58,355 C70,368 88,368 98,355 C108,342 107,315 96,302 C84,289 65,282 55,295 Z"
+                fill="url(#lakeGrad)" stroke="#1e4d8c" strokeWidth="2" opacity="0.85" />
+
+              {/* === LAKE KYOGA (Center) === */}
+              <path d="M220,110 C240,105 265,115 270,130 C275,148 260,160 240,158 C220,156 205,145 207,130 C209,118 215,112 220,110 Z"
+                fill="url(#lakeGrad)" stroke="#1e4d8c" strokeWidth="1.5" opacity="0.8" />
+
+              {/* === FRAUD ALERT MARKERS (from geoMetrics) === */}
+              {geoMetrics.length > 0 && (() => {
+                const sorted = [...geoMetrics].sort((a, b) => b.current_vol - a.current_vol);
+                const topGeo = sorted[0];
+
+                // District center coordinates mapped to the SVG viewBox
+                const districtCoords: Record<string, { cx: number, cy: number }> = {
+                  'Kampala': { cx: 228, cy: 165 },
+                  'Wakiso':  { cx: 185, cy: 180 },
+                  'Masaka':  { cx: 190, cy: 300 },
+                  'Mbarara': { cx: 130, cy: 290 },
+                  'Gulu':    { cx: 185, cy: 45 },
+                  'Jinja':   { cx: 280, cy: 185 },
+                };
+
+                return sorted.map((geo, idx) => {
+                  const coord = districtCoords[geo.district] || { cx: 250, cy: 280 };
+                  const isTop = geo.district === topGeo.district;
+                  const isCritical = geo.hazard_state === 'CRITICAL';
+                  const isWarning = geo.hazard_state === 'WARNING';
+
+                  if (isTop) {
+                    // Big red pulsing halt button for the worst district
+                    return (
+                      <g key={geo.district}>
+                        {/* Outermost slow pulse */}
+                        <circle cx={coord.cx} cy={coord.cy} r="55" fill="rgba(211,84,80,0.12)">
+                          <animate attributeName="r" values="45;70;45" dur="3s" repeatCount="indefinite"/>
+                          <animate attributeName="opacity" values="0.3;0.05;0.3" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        {/* Middle pulse */}
+                        <circle cx={coord.cx} cy={coord.cy} r="35" fill="rgba(211,84,80,0.25)">
+                          <animate attributeName="r" values="30;50;30" dur="2s" repeatCount="indefinite"/>
+                          <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                        {/* Inner pulse */}
+                        <circle cx={coord.cx} cy={coord.cy} r="22" fill="rgba(211,84,80,0.5)">
+                          <animate attributeName="r" values="18;28;18" dur="1.2s" repeatCount="indefinite"/>
+                          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.2s" repeatCount="indefinite"/>
+                        </circle>
+                        {/* Core halt button */}
+                        <circle cx={coord.cx} cy={coord.cy} r="16" fill="#D35450" filter="url(#haltGlow)" />
+                        <circle cx={coord.cx} cy={coord.cy} r="16" fill="none" stroke="white" strokeWidth="2.5" />
+                        {/* Octagon stop symbol */}
+                        <polygon
+                          points={`${coord.cx},${coord.cy - 8} ${coord.cx + 5.5},${coord.cy - 5.5} ${coord.cx + 8},${coord.cy} ${coord.cx + 5.5},${coord.cy + 5.5} ${coord.cx},${coord.cy + 8} ${coord.cx - 5.5},${coord.cy + 5.5} ${coord.cx - 8},${coord.cy} ${coord.cx - 5.5},${coord.cy - 5.5}`}
+                          fill="white"
+                        />
+                      </g>
+                    );
+                  } else {
+                    // Smaller secondary markers for other districts
+                    const dotColor = isCritical ? '#D35450' : isWarning ? '#EAB308' : '#22c55e';
+                    return (
+                      <g key={geo.district}>
+                        <circle cx={coord.cx} cy={coord.cy} r="7" fill={dotColor} opacity="0.3">
+                          <animate attributeName="r" values="5;10;5" dur="2.5s" repeatCount="indefinite"/>
+                          <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <circle cx={coord.cx} cy={coord.cy} r="5" fill={dotColor} stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" />
+                      </g>
+                    );
+                  }
+                });
+              })()}
+
+              {/* Fallback: if no data, show static halt button on Kampala */}
+              {geoMetrics.length === 0 && (
+                <g>
+                  <circle cx={228} cy={165} r="55" fill="rgba(211,84,80,0.12)">
+                    <animate attributeName="r" values="45;70;45" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.3;0.05;0.3" dur="3s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx={228} cy={165} r="35" fill="rgba(211,84,80,0.25)">
+                    <animate attributeName="r" values="30;50;30" dur="2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx={228} cy={165} r="18" fill="rgba(211,84,80,0.5)">
+                    <animate attributeName="r" values="14;22;14" dur="1.2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx={228} cy={165} r="16" fill="#D35450" filter="url(#haltGlow)" />
+                  <circle cx={228} cy={165} r="16" fill="none" stroke="white" strokeWidth="2.5" />
+                  <polygon points="228,157 233.5,159.5 236,165 233.5,170.5 228,173 222.5,170.5 220,165 222.5,159.5" fill="white" />
+                </g>
+              )}
             </svg>
           </div>
-          
-          {/* Highlight Single Highest Fraud Concentration */}
-          <div className="relative w-full h-full">
-            {geoMetrics.length > 0 && (
-              (() => {
-                // Find highest concentration
-                const topGeo = [...geoMetrics].sort((a, b) => b.current_vol - a.current_vol)[0];
-                
-                const positions: Record<string, { top: string, left: string }> = {
-                  'Kampala': { top: '45%', left: '55%' },
-                  'Wakiso': { top: '50%', left: '48%' },
-                  'Masaka': { top: '75%', left: '35%' },
-                  'Mbarara': { top: '85%', left: '25%' },
-                  'Gulu': { top: '25%', left: '45%' },
-                  'Jinja': { top: '50%', left: '65%' },
-                };
-                
-                const pos = positions[topGeo.district] || { top: '50%', left: '50%' };
-                const glowColor = 'rgba(211,84,80,0.6)';
 
-                return (
-                  <div className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20"
-                    style={{ top: pos.top, left: pos.left }}
-                  >
-                    <div className="relative flex items-center justify-center">
-                      {/* Massive Pulsing Radar Rings */}
-                      <div className="absolute w-40 h-40 rounded-full animate-ping" style={{ backgroundColor: glowColor, animationDuration: '2.5s' }} />
-                      <div className="absolute w-24 h-24 rounded-full animate-ping" style={{ backgroundColor: glowColor, animationDuration: '1.2s' }} />
-                      
-                      {/* Big Red Halt Button */}
-                      <div className="w-12 h-12 rounded-full border-4 border-white shadow-[0_0_30px_rgba(211,84,80,1)] z-10 flex items-center justify-center bg-[#D35450]">
-                         <div className="w-4 h-4 bg-white" style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%)' }} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()
-            )}
+          {/* Top-right status badge — minimal, professional */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1.5 z-20">
+            <span className="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_6px_rgba(248,113,113,1)]">
+              <span className="sr-only">live</span>
+            </span>
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Live Feed</span>
           </div>
         </div>
-      </div>
+
 
       {/* SECTION 4: REAL-TIME NATIONAL SYSTEMIC FRAUD TICKER & AUDIO LEDGER */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

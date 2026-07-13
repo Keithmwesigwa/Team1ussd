@@ -8,30 +8,34 @@
 :root, :root[data-role="bou"] {
   --primary: #800020;
   --primary-hover: #5c0017;
-  --accent: #FDFBD3;
+  --accent: #F5F0E8;
   --accent-foreground: #800020;
-  --bg-dashboard: #FFFDF9;
-  --card-bg: #FFFFFF;
-  --card-border: #E8E2D5;
-  --text-main: #3C0A15;
-  --text-muted: #7E6B6E;
+  --bg-dashboard: #F5F0E8;
+  --card-bg: #FFFDF8;
+  --card-border: #D9C9B8;
+  --text-main: #2C0A12;
+  --text-muted: #7A5C62;
   --pulse-warning-color: rgba(128, 0, 32, 0.4);
-  --progress-bg: #EED;
+  --progress-bg: #E8DDD0;
+  --header-bg: #800020;
+  --header-text: #F5F0E8;
 }
 
 /* BoU Dark Mode */
 :root[data-role="bou"][data-theme="dark"] {
   --primary: #A21C38;
   --primary-hover: #800020;
-  --accent: #FDFBD3;
-  --accent-foreground: #FDFBD3;
-  --bg-dashboard: #0F0407;
-  --card-bg: #1B0B0E;
+  --accent: #F5ECD8;
+  --accent-foreground: #F5ECD8;
+  --bg-dashboard: #120508;
+  --card-bg: #1E0A0E;
   --card-border: #3A1B22;
-  --text-main: #FFFDF9;
-  --text-muted: #A38C91;
-  --pulse-warning-color: rgba(253, 251, 211, 0.35);
+  --text-main: #F5F0E8;
+  --text-muted: #B09898;
+  --pulse-warning-color: rgba(245, 240, 232, 0.35);
   --progress-bg: #2D1418;
+  --header-bg: #5c0017;
+  --header-text: #F5F0E8;
 }
 
 /* MTN Light Mode */
