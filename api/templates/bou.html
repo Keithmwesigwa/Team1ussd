@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --bg-page:  #f1f5f9;
@@ -144,6 +146,25 @@
         /* ESCALATE BTN */
         .esc-btn { background:#fee2e2; border:1px solid #fecaca; color:var(--danger); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .18s; white-space:nowrap; }
         .esc-btn:hover { background:var(--danger); color:#fff; }
+
+        /* MAP STYLING */
+        #map {
+            width: 100%;
+            height: 380px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            z-index: 1;
+        }
+        .box {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+        .red { background: #d50000; }
+        .orange { background: #fb8c00; }
+        .green { background: #43a047; }
         .esc-done { background:var(--bg-muted); border:1px solid var(--border); color:var(--text-m); padding:.4rem .85rem; border-radius:8px; font-size:.78rem; font-weight:700; cursor:default; }
 
         .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem; color:var(--text-m); gap:.75rem; text-align:center; }
@@ -227,6 +248,25 @@
             </div>
         </div>
 
+        <!-- FRAUD RISK HEATMAP -->
+        <div class="card" style="padding: 1.25rem;">
+            <div class="card-hd" style="margin-bottom: 1rem;">
+                <div class="card-title">
+                    <div class="ct-icon" style="background:#fee2e2; color:var(--danger);"><i data-lucide="map" style="width:14px;height:14px;"></i></div>
+                    National Fraud Watch Heat Map (Real-Time Risk Zones)
+                </div>
+            </div>
+            <div style="position: relative;">
+                <div id="map"></div>
+                <div id="map-legend" style="position: absolute; bottom: 15px; left: 15px; background: white; padding: 12px; border-radius: 8px; z-index: 1000; box-shadow: 0 3px 12px rgba(0,0,0,.15); font-size: .78rem; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px;">
+                    <h4 style="margin: 0 0 6px; font-weight: 800; color: var(--text-h);">Fraud Risk Levels</h4>
+                    <div style="display:flex; align-items:center; gap:6px;"><span class="box red"></span> High Risk (15+ cases): <span id="legend-high" style="font-weight:700;">0 zones</span></div>
+                    <div style="display:flex; align-items:center; gap:6px;"><span class="box orange"></span> Medium Risk (5-14 cases): <span id="legend-medium" style="font-weight:700;">0 zones</span></div>
+                    <div style="display:flex; align-items:center; gap:6px;"><span class="box green"></span> Low Risk (0-4 cases): <span id="legend-low" style="font-weight:700;">0 zones</span></div>
+                </div>
+            </div>
+        </div>
+
         <!-- SLA Breach banner -->
         <div class="breach-banner" id="breach-banner" style="display:none;">
             <div class="breach-txt">
@@ -276,6 +316,88 @@
     <script>
         lucide.createIcons();
 
+        // Initialize Map
+        const map = L.map('map').setView([1.3733, 32.2903], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        map.setMaxBounds([
+            [-2.0, 29.3],
+            [4.5, 35.2]
+        ]);
+
+        const circlesGroup = L.layerGroup().addTo(map);
+
+        const coordinates = {
+            'Kampala': [0.3476, 32.5825],
+            'Wakiso': [0.4044, 32.4594],
+            'Mpigi': [0.2250, 32.3130],
+            'Jinja': [0.4244, 33.2042],
+            'Gulu': [2.7720, 32.2990],
+            'Mbarara': [-0.6072, 30.6545],
+            'Masaka': [-0.3421, 31.7341],
+            'Entebbe': [0.0511, 32.4637],
+            'Mukono': [0.3533, 32.7553]
+        };
+
+        function renderMap(cases) {
+            const counts = {};
+            Object.keys(coordinates).forEach(k => counts[k] = 0);
+
+            cases.forEach(c => {
+                const loc = c.location || 'Kampala';
+                if (coordinates[loc]) {
+                    counts[loc]++;
+                }
+            });
+
+            circlesGroup.clearLayers();
+
+            let highZones = 0, mediumZones = 0, lowZones = 0;
+
+            Object.entries(coordinates).forEach(([city, coords]) => {
+                const count = counts[city];
+                let color, fillColor, op;
+
+                if (count >= 15) {
+                    color = '#d50000';
+                    fillColor = '#ff1744';
+                    op = 0.35;
+                    highZones++;
+                } else if (count >= 5) {
+                    color = '#fb8c00';
+                    fillColor = '#ffb300';
+                    op = 0.35;
+                    mediumZones++;
+                } else {
+                    color = '#2e7d32';
+                    fillColor = '#4caf50';
+                    op = 0.25;
+                    lowZones++;
+                }
+
+                // calculate dynamic radius based on count: min 5000m, adds 1500m per complaint
+                const radius = 5000 + (count * 1500);
+
+                L.circle(coords, {
+                    radius: radius,
+                    color: color,
+                    fillColor: fillColor,
+                    fillOpacity: op,
+                    weight: 2
+                })
+                .addTo(circlesGroup)
+                .bindPopup(`<b>${city} Risk Zone</b><br>Fraud Reports: ${count}`);
+            });
+
+            // Update legend UI text
+            document.getElementById('legend-high').textContent = `${highZones} zone${highZones !== 1 ? 's' : ''}`;
+            document.getElementById('legend-medium').textContent = `${mediumZones} zone${mediumZones !== 1 ? 's' : ''}`;
+            document.getElementById('legend-low').textContent = `${lowZones} zone${lowZones !== 1 ? 's' : ''}`;
+        }
+
         async function loadData() {
             try {
                 const [statsR, casesR] = await Promise.all([
@@ -286,6 +408,7 @@
                 const cases = await casesR.json();
                 renderStats(stats, cases);
                 renderTable(cases);
+                renderMap(cases);
             } catch(e) { console.error(e); }
         }
 

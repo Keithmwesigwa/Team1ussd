@@ -46,9 +46,16 @@ def init_db():
             updated_at TEXT,
             notes TEXT,
             sla_deadline TEXT,
-            escalated INTEGER DEFAULT 0
+            escalated INTEGER DEFAULT 0,
+            location TEXT DEFAULT 'Kampala'
         )
     ''')
+
+    # Run migration if location column doesn't exist
+    try:
+        cursor.execute("ALTER TABLE complaints ADD COLUMN location TEXT DEFAULT 'Kampala'")
+    except sqlite3.OperationalError:
+        pass # Column already exists
     
     # Check if we have sample data, if not, insert some
     cursor.execute("SELECT COUNT(*) FROM complaints")
@@ -59,11 +66,11 @@ def init_db():
         created_1 = (now - timedelta(hours=2)).isoformat()
         deadline_1 = (now - timedelta(hours=2) + timedelta(hours=48)).isoformat()
         cursor.execute('''
-            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated, location)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             'FG-8241', '+256770123456', 'MTN', 'USSD Reported', 150000.0, 'PENDING', 'English',
-            created_1, created_1, 'Subscriber reports unauthorized SIM swap on their line.', deadline_1, 0
+            created_1, created_1, 'Subscriber reports unauthorized SIM swap on their line.', deadline_1, 0, 'Kampala'
         ))
         
         # 2. Resolved Telecom Y Case (Reported 50 hours ago, resolved 10 hours ago)
@@ -71,29 +78,29 @@ def init_db():
         resolved_2 = (now - timedelta(hours=10)).isoformat()
         deadline_2 = (now - timedelta(hours=50) + timedelta(hours=48)).isoformat()
         cursor.execute('''
-            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated, location)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             'FG-1001', '+256701987654', 'AIRTEL', 'Card/Bank Fraud', 500000.0, 'RESOLVED', 'Luganda',
-            created_2, resolved_2, 'Reversal processed. Funds restored.', deadline_2, 0
+            created_2, resolved_2, 'Reversal processed. Funds restored.', deadline_2, 0, 'Wakiso'
         ))
         
         # 3. Overdue SLA-Breached Telecom X Case (Reported 72 hours ago, still pending)
         created_3 = (now - timedelta(hours=72)).isoformat()
         deadline_3 = (now - timedelta(hours=72) + timedelta(hours=48)).isoformat()
         cursor.execute('''
-            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated, location)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             'FG-4099', '+256772223344', 'MTN', 'Identity Theft', 2000000.0, 'PENDING', 'Runyakitara',
-            created_3, created_3, 'Subscriber reports SIM takeover on Telecom X.', deadline_3, 0
+            created_3, created_3, 'Subscriber reports SIM takeover on Telecom X.', deadline_3, 0, 'Mpigi'
         ))
         
         conn.commit()
     
     conn.close()
 
-def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, language='English', notes=None):
+def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, language='English', notes=None, location='Kampala'):
     conn = get_connection()
     cursor = conn.cursor()
     
@@ -106,9 +113,9 @@ def create_complaint(complaint_id, phone_number, provider, fraud_type, amount, l
     normalized_provider = normalize_provider(provider)
 
     cursor.execute('''
-        INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated)
-        VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, 0)
-    ''', (complaint_id, phone_number, normalized_provider, fraud_type, float(amount), language, created_at, created_at, notes, sla_deadline))
+        INSERT INTO complaints (id, phone_number, provider, fraud_type, amount, status, language, created_at, updated_at, notes, sla_deadline, escalated, location)
+        VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, 0, ?)
+    ''', (complaint_id, phone_number, normalized_provider, fraud_type, float(amount), language, created_at, created_at, notes, sla_deadline, location or 'Kampala'))
     
     conn.commit()
     conn.close()

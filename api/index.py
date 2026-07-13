@@ -264,12 +264,13 @@ def api_create_complaint():
     amount      = data.get('amount', 0)
     language    = data.get('language', 'English')
     notes_text  = data.get('notes', '')
+    location    = data.get('location', 'Kampala')
 
     # Generate unique ticket ID
     suffix = ''.join(random.choices(string.digits, k=4))
     ticket_id = f"FG-{suffix}"
 
-    create_complaint(ticket_id, phone, provider, fraud_type, amount, language)
+    create_complaint(ticket_id, phone, provider, fraud_type, amount, language, location=location)
 
     # Append extra notes if provided
     if notes_text:
@@ -372,8 +373,12 @@ def ussd():
         # Save complaint to DB
         suffix    = ''.join(random.choices(string.digits, k=4))
         ticket_id = f"FG-{suffix}"
+        
+        major_towns = ['Kampala', 'Wakiso', 'Mpigi', 'Jinja', 'Gulu', 'Mbarara', 'Masaka', 'Entebbe', 'Mukono']
+        random_loc  = random.choice(major_towns)
+
         create_complaint(ticket_id, phone_number, provider_short,
-                         "USSD Reported", 0, lang_map[current_lang], notes=description)
+                         "USSD Reported", 0, lang_map[current_lang], notes=description, location=random_loc)
 
         response = f"END {t['ivr_redirect'].format(provider=provider_name)}\nTicket: {ticket_id}."
         trigger_outbound_ivr(phone_number, provider_name, current_lang)
