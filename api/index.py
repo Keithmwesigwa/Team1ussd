@@ -341,37 +341,6 @@ def ussd():
     input_chain  = text.split('*')
     response     = ""
 
-    # Support compact USSD submissions used by automated checks.
-    if len(input_chain) >= 3 and input_chain[0] == '1' and input_chain[1] in ('1', '2') and input_chain[2] in ('1', '2', '3', '4'):
-        provider_map = {
-            '1': ('Telecom X', 'MTN'),
-            '2': ('Telecom Y', 'AIRTEL'),
-        }
-        fraud_map = {
-            '1': 'Unauthorized Transaction',
-            '2': 'Scammer Impersonation',
-            '3': 'Agent/Merchant Overcharge',
-            '4': 'Other',
-        }
-        provider_name, provider_short = provider_map[input_chain[1]]
-        fraud_type = fraud_map[input_chain[2]]
-        ticket_id = f"FG-{''.join(random.choices(string.digits, k=4))}"
-
-        create_complaint(
-            ticket_id,
-            phone_number,
-            provider_short,
-            fraud_type,
-            0,
-            'English'
-        )
-
-        response = f"END Thank you. Ticket: {ticket_id}. Your complaint for {provider_name} has been logged."
-
-        resp = make_response(response)
-        resp.headers['Content-Type'] = 'text/plain'
-        return resp
-
     # SCREEN 0: MAIN MENU
     if text == '':
         response = (f"CON {t['welcome']}\n"
